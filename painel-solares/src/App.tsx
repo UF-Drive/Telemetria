@@ -3,16 +3,29 @@ import {
   Menu, Moon, Sun, User, Activity, 
   BarChart2, Zap, Settings, Database, 
   ArrowLeft, LogOut, Unlock, Trash2, Plus,
-  Info, Shield, AlertTriangle
+  Info, Shield, AlertTriangle, ChevronDown
 } from 'lucide-react';
 
 // --- Mock Data Inicial ---
 const initialMainData = Array.from({ length: 40 }, () => Math.floor(Math.random() * 50) + 20);
-const multiChartData = {
+const initialMultiData = {
   series1: Array.from({ length: 20 }, () => Math.floor(Math.random() * 30) + 60),
   series2: Array.from({ length: 20 }, () => Math.floor(Math.random() * 40) + 20),
   series3: Array.from({ length: 20 }, () => Math.floor(Math.random() * 20) + 5),
 };
+
+// Criando Modelo de Usuário
+
+interface Member {
+  id: number;
+  email: string;
+  name: string;
+  mainRole: string;
+  isModerador: boolean;
+  photo: string;
+  isOnline?: boolean;
+  lastSeen?: string;
+}
 
 // --- Mock da Equipe (com a estrutura de Roles e Status) ---
 const initialMembers = [
@@ -49,16 +62,16 @@ const initialMembers = [
 ];
 
 // --- Funções Auxiliares ---
-const generatePolyline = (data, width, height, maxVal) => {
+const generatePolyline = (data: number[], width: number, height: number, maxVal: number) => {
   const stepX = width / (data.length - 1);
-  return data.map((val, index) => {
+  return data.map((val: number, index: number) => {
     const x = index * stepX;
     const y = height - (val / maxVal) * height;
     return `${x},${y}`;
   }).join(' ');
 };
 
-const generateNameFromEmail = (email) => {
+const generateNameFromEmail = (email: string) => {
   const prefix = email.split('@')[0];
   return prefix.split('.').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
 };
@@ -85,7 +98,7 @@ const GoogleIcon = ({ size = 24 }) => (
 
 export default function App() {
   const [members, setMembers] = useState(initialMembers);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<Member | null>(null);
   
   // Estados da Tela de Login
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -95,7 +108,7 @@ export default function App() {
 
   // Estados da Interface do Painel
   const [darkMode, setDarkMode] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // No mobile, false = fechado fora da tela. No desktop, false = retraído.
   const [pilotMode, setPilotMode] = useState(false);
   const [activeTab, setActiveTab] = useState('Resumo');
   
@@ -106,6 +119,7 @@ export default function App() {
 
   // Estados de Dados
   const [mainData, setMainData] = useState(initialMainData);
+  const [multiData, setMultiData] = useState(initialMultiData);
   const [rpm, setRpm] = useState(1450);
   const [speed, setSpeed] = useState(10);
   const [battery, setBattery] = useState(100);
@@ -130,6 +144,13 @@ export default function App() {
         newData.push(Math.max(10, Math.min(90, lastVal + (Math.random() * 10 - 5))));
         return newData;
       });
+
+      setMultiData(prev => ({
+        series1: [...prev.series1.slice(1), Math.max(50, Math.min(100, prev.series1[prev.series1.length - 1] + (Math.random() * 10 - 5)))],
+        series2: [...prev.series2.slice(1), Math.max(20, Math.min(70, prev.series2[prev.series2.length - 1] + (Math.random() * 10 - 5)))],
+        series3: [...prev.series3.slice(1), Math.max(0, Math.min(30, prev.series3[prev.series3.length - 1] + (Math.random() * 6 - 3)))]
+      }));
+
       setRpm(prev => Math.floor(prev + (Math.random() * 50 - 25)));
       setSpeed(prev => Math.max(0, prev + (Math.random() * 0.4 - 0.2)));
       
@@ -156,7 +177,9 @@ export default function App() {
         setShowUnlockAnim(true);
         setTimeout(() => {
           const loggedUser = members.find(m => m.id === 1);
-          setCurrentUser(loggedUser);
+          if (loggedUser) {
+            setCurrentUser(loggedUser);
+          }
           setShowUnlockAnim(false);
         }, 1200);
       }
@@ -164,7 +187,7 @@ export default function App() {
   };
 
   // Funções de Gerenciamento de Equipe
-  const handleAddMember = (e) => {
+  const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
     if(!newMemberEmail) return;
     
@@ -186,11 +209,11 @@ export default function App() {
     setNewMemberIsMod(false);
   };
 
-  const handleRemoveMember = (id) => {
+  const handleRemoveMember = (id: number) => {
     setMembers(members.filter(m => m.id !== id));
   };
 
-  const handleUpdateMemberRole = (id, field, value) => {
+  const handleUpdateMemberRole = (id: number, field: keyof Member, value: string | boolean) => {
     setMembers(members.map(m => m.id === id ? { ...m, [field]: value } : m));
   };
 
@@ -397,13 +420,35 @@ export default function App() {
   const estMinutes = Math.floor((estimatedTimeRaw - estHours) * 60);
 
   return (
-    <div className={`flex h-screen w-full transition-colors duration-300 font-sans ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>
+    <div className={`flex h-screen w-full transition-colors duration-300 font-sans overflow-hidden ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>
       
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 flex flex-col border-r ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} relative z-20`}>
-        <div className="h-16 flex items-center justify-between px-4 border-b border-inherit">
-          {sidebarOpen && <span className="font-bold text-xl tracking-wider text-orange-500">TELEMETRIA</span>}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${!sidebarOpen && 'mx-auto'}`}>
-            <Menu size={24} />
+      {/* OVERLAY PARA MOBILE (Escurece o fundo quando o menu abre) */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* SIDEBAR RESPONSIVA */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'} 
+        md:relative md:translate-x-0 ${sidebarOpen ? 'md:w-64' : 'md:w-20'}
+        flex flex-col border-r shadow-2xl md:shadow-none
+        ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
+      `}>
+        <div className={`h-16 flex items-center border-b border-inherit shrink-0 ${sidebarOpen ? 'justify-between px-4' : 'justify-between px-4 md:justify-center md:px-0'}`}>
+          <span className={`font-bold text-xl tracking-wider text-orange-500 ${!sidebarOpen ? 'md:hidden' : ''}`}>
+            TELEMETRIA
+          </span>
+          <button 
+            onClick={() => setSidebarOpen(!sidebarOpen)} 
+            className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0"
+          >
+            {/* Ícone de menu no desktop, seta de voltar no mobile */}
+            <Menu size={24} className="hidden md:block" />
+            <ArrowLeft size={24} className="md:hidden" />
           </button>
         </div>
         
@@ -418,15 +463,25 @@ export default function App() {
             ].map((item, idx) => (
               <li key={idx}>
                 <button 
-                  onClick={() => setActiveTab(item.label)}
-                  className={`w-full flex items-center px-4 py-3 rounded-xl transition-all ${
+                  onClick={() => {
+                    setActiveTab(item.label);
+                    // Fecha automaticamente a sidebar no mobile ao clicar em um link
+                    if (window.innerWidth < 768) {
+                      setSidebarOpen(false);
+                    }
+                  }}
+                  className={`w-full flex items-center py-3 rounded-xl transition-all ${
+                    sidebarOpen ? 'px-4 justify-start' : 'px-4 md:px-0 md:justify-center'
+                  } ${
                     activeTab === item.label 
                       ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' 
                       : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
                 >
-                  <item.icon size={20} className={sidebarOpen ? 'mr-4' : 'mx-auto'} />
-                  {sidebarOpen && <span className="font-medium">{item.label}</span>}
+                  <item.icon size={20} className={sidebarOpen ? 'mr-4 shrink-0' : 'mr-4 md:mr-0 shrink-0'} />
+                  <span className={`font-medium whitespace-nowrap ${!sidebarOpen ? 'md:hidden' : ''}`}>
+                    {item.label}
+                  </span>
                 </button>
               </li>
             ))}
@@ -434,11 +489,20 @@ export default function App() {
         </nav>
       </aside>
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      {/* MAIN CONTENT */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
         
         {/* TOP HEADER */}
-        <header className={`h-16 flex items-center justify-between px-4 md:px-8 border-b transition-colors duration-300 ${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white/50 border-gray-200'} backdrop-blur-md`}>
+        <header className={`h-16 flex items-center justify-between px-4 md:px-8 border-b transition-colors duration-300 shrink-0 ${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white/50 border-gray-200'} backdrop-blur-md`}>
           <div className="flex items-center min-w-0 mr-4">
+             {/* BOTÃO DO MENU NO MOBILE */}
+             <button 
+               onClick={() => setSidebarOpen(true)}
+               className="md:hidden mr-3 p-2 -ml-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300"
+             >
+               <Menu size={24} />
+             </button>
+
              <h1 className="text-xl md:text-2xl font-bold truncate">Painel de Controle</h1>
              <span className="hidden md:flex ml-4 px-3 py-1 text-xs font-bold bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20 rounded-full items-center whitespace-nowrap shadow-sm">
                <span className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400 mr-2 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
@@ -516,7 +580,7 @@ export default function App() {
                 </div>
                 {currentUser.isModerador && (
                   <div className="px-3 py-1 bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-full text-xs font-bold flex items-center">
-                    <Shield size={14} className="mr-1" /> Moderador Ativo
+                    <Shield size={14} className="mr-1 shrink-0" /> <span className="hidden sm:inline">Moderador Ativo</span>
                   </div>
                 )}
               </div>
@@ -532,14 +596,17 @@ export default function App() {
                       value={newMemberEmail} onChange={e => setNewMemberEmail(e.target.value)}
                       className={`md:col-span-5 px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500 outline-none transition-colors ${darkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300'}`}
                     />
-                    <select
-                      value={newMemberRole} onChange={e => setNewMemberRole(e.target.value)}
-                      className={`md:col-span-3 px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500 outline-none transition-colors ${darkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300'}`}
-                    >
-                      <option value="">Sem Função Especial</option>
-                      <option value="Piloto">Piloto</option>
-                      <option value="Engenheiro de Prova">Engenheiro de Prova</option>
-                    </select>
+                    <div className="relative md:col-span-3">
+                      <select
+                        value={newMemberRole} onChange={e => setNewMemberRole(e.target.value)}
+                        className={`w-full appearance-none px-4 py-3 pr-10 rounded-xl border focus:ring-2 focus:ring-orange-500 outline-none transition-colors ${darkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300'}`}
+                      >
+                        <option value="">Sem Função Especial</option>
+                        <option value="Piloto">Piloto</option>
+                        <option value="Engenheiro de Prova">Engenheiro de Prova</option>
+                      </select>
+                      <ChevronDown size={18} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                    </div>
                     
                     <label className={`md:col-span-2 flex items-center justify-center space-x-2 px-4 py-3 rounded-xl border cursor-pointer select-none transition-colors ${darkMode ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-gray-50 border-gray-300 hover:bg-gray-100'}`}>
                       <input 
@@ -567,86 +634,91 @@ export default function App() {
                     Total: {members.length}
                   </span>
                 </div>
-                <div className="divide-y transition-colors duration-300">
-                  {members.map(member => (
-                    <div key={member.id} className={`flex items-center justify-between p-5 transition-colors ${darkMode ? 'border-gray-700 hover:bg-gray-700/50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                      
-                      <div className="flex items-center space-x-4 w-1/2">
-                        <img 
-                          src={member.photo} 
-                          alt={member.name} 
-                          className={`w-12 h-12 flex-shrink-0 rounded-full object-cover ${member.isModerador ? 'border-[3px] border-orange-500' : (darkMode ? 'border-2 border-gray-600' : 'border-2 border-gray-300')}`} 
-                        />
-                        <div className="flex flex-col">
-                          <p className="font-bold text-md flex items-center">
-                            {member.name}
-                            {member.isOnline && (
-                              <span className="ml-2 w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]" title="Online agora"></span>
-                            )}
-                            {member.isModerador && <Shield size={14} className="ml-2 text-orange-500" title="Moderador" />}
-                          </p>
-                          <div className={`flex flex-col text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            <span>{member.email}</span>
-                            <span className="text-[11px] font-medium opacity-80 mt-0.5">
-                              {member.isOnline ? (
-                                <span className="text-green-600 dark:text-green-400">Ativo agora</span>
-                              ) : (
-                                <span>Visto por último: {member.lastSeen}</span>
+                <div className="divide-y transition-colors duration-300 overflow-x-auto">
+                  <div className="min-w-[600px]">
+                    {members.map(member => (
+                      <div key={member.id} className={`flex items-center justify-between p-5 transition-colors ${darkMode ? 'border-gray-700 hover:bg-gray-700/50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                        
+                        <div className="flex items-center space-x-4 w-1/2">
+                          <img 
+                            src={member.photo} 
+                            alt={member.name} 
+                            className={`w-12 h-12 flex-shrink-0 rounded-full object-cover ${member.isModerador ? 'border-[3px] border-orange-500' : (darkMode ? 'border-2 border-gray-600' : 'border-2 border-gray-300')}`} 
+                          />
+                          <div className="flex flex-col">
+                            <p className="font-bold text-md flex items-center">
+                              {member.name}
+                              {member.isOnline && (
+                                <span className="ml-2 w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]" title="Online agora"></span>
                               )}
-                            </span>
+                              {member.isModerador && <Shield size={14} className="ml-2 text-orange-500"/>}
+                            </p>
+                            <div className={`flex flex-col text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              <span>{member.email}</span>
+                              <span className="text-[11px] font-medium opacity-80 mt-0.5">
+                                {member.isOnline ? (
+                                  <span className="text-green-600 dark:text-green-400">Ativo agora</span>
+                                ) : (
+                                  <span>Visto por último: {member.lastSeen}</span>
+                                )}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex items-center space-x-6">
-                        {currentUser.isModerador ? (
-                          <>
-                            <select 
-                              value={member.mainRole}
-                              onChange={(e) => handleUpdateMemberRole(member.id, 'mainRole', e.target.value)}
-                              className={`text-sm px-3 py-1.5 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${darkMode ? 'bg-gray-900 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-300'}`}
-                            >
-                              <option value="">Sem Função Especial</option>
-                              <option value="Piloto">Piloto</option>
-                              <option value="Engenheiro de Prova">Engenheiro de Prova</option>
-                            </select>
-                            
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                              <input 
-                                type="checkbox" 
-                                checked={member.isModerador}
-                                onChange={(e) => handleUpdateMemberRole(member.id, 'isModerador', e.target.checked)}
-                                className="w-4 h-4 text-orange-500 rounded focus:ring-orange-500"
-                              />
-                              <span className={`text-sm font-semibold ${member.isModerador ? 'text-orange-500' : (darkMode ? 'text-gray-400' : 'text-gray-600')}`}>Mod</span>
-                            </label>
+                        <div className="flex items-center space-x-6">
+                          {currentUser.isModerador ? (
+                            <>
+                              <div className="relative">
+                                <select 
+                                  value={member.mainRole}
+                                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleUpdateMemberRole(member.id, 'mainRole', e.target.value)}
+                                  className={`appearance-none text-sm px-3 py-1.5 pr-8 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${darkMode ? 'bg-gray-900 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-300'}`}
+                                >
+                                  <option value="">Sem Função Especial</option>
+                                  <option value="Piloto">Piloto</option>
+                                  <option value="Engenheiro de Prova">Engenheiro de Prova</option>
+                                </select>
+                                <ChevronDown size={14} className={`absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                              </div>
+                              
+                              <label className="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={member.isModerador}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleUpdateMemberRole(member.id, 'isModerador', e.target.checked)}
+                                  className="w-4 h-4 text-orange-500 rounded focus:ring-orange-500"
+                                />
+                                <span className={`text-sm font-semibold ${member.isModerador ? 'text-orange-500' : (darkMode ? 'text-gray-400' : 'text-gray-600')}`}>Mod</span>
+                              </label>
 
-                            <button 
-                              onClick={() => handleRemoveMember(member.id)}
-                              disabled={member.email === currentUser.email}
-                              className="p-2 text-red-500 hover:bg-red-500/10 hover:text-red-600 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                              title={member.email === currentUser.email ? "Você não pode remover a si mesmo" : "Remover Membro"}
-                            >
-                              <Trash2 size={20} />
-                            </button>
-                          </>
-                        ) : (
-                          <div className="flex items-center space-x-3">
-                            {member.mainRole && (
-                              <span className={`px-4 py-1.5 text-xs font-bold rounded-full ${darkMode ? 'bg-blue-900/40 text-blue-400 border border-blue-800' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
-                                {member.mainRole}
-                              </span>
-                            )}
-                            {member.isModerador && (
-                              <span className={`px-4 py-1.5 text-xs font-bold rounded-full ${darkMode ? 'bg-orange-900/40 text-orange-400 border border-orange-800' : 'bg-orange-100 text-orange-700 border border-orange-200'}`}>
-                                Moderador
-                              </span>
-                            )}
-                          </div>
-                        )}
+                              <button 
+                                onClick={() => handleRemoveMember(member.id)}
+                                disabled={member.email === currentUser.email}
+                                className="p-2 text-red-500 hover:bg-red-500/10 hover:text-red-600 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                title={member.email === currentUser.email ? "Você não pode remover a si mesmo" : "Remover Membro"}
+                              >
+                                <Trash2 size={20} />
+                              </button>
+                            </>
+                          ) : (
+                            <div className="flex items-center space-x-3">
+                              {member.mainRole && (
+                                <span className={`px-4 py-1.5 text-xs font-bold rounded-full ${darkMode ? 'bg-blue-900/40 text-blue-400 border border-blue-800' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
+                                  {member.mainRole}
+                                </span>
+                              )}
+                              {member.isModerador && (
+                                <span className={`px-4 py-1.5 text-xs font-bold rounded-full ${darkMode ? 'bg-orange-900/40 text-orange-400 border border-orange-800' : 'bg-orange-100 text-orange-700 border border-orange-200'}`}>
+                                  Moderador
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                   {members.length === 0 && (
                     <div className="p-10 text-center text-gray-500 font-medium">Nenhum membro cadastrado.</div>
                   )}
@@ -694,9 +766,9 @@ export default function App() {
                         {[50, 100, 150].map(y => (
                           <line key={`grid2-${y}`} x1="0" y1={y} x2="500" y2={y} stroke={darkMode ? '#374151' : '#f3f4f6'} strokeWidth="1" />
                         ))}
-                        <polyline points={generatePolyline(multiChartData.series1, 500, 200, 100)} fill="none" stroke="#3b82f6" strokeWidth="3" />
-                        <polyline points={generatePolyline(multiChartData.series2, 500, 200, 100)} fill="none" stroke="#eab308" strokeWidth="3" />
-                        <polyline points={generatePolyline(multiChartData.series3, 500, 200, 100)} fill="none" stroke="#ef4444" strokeWidth="3" />
+                        <polyline points={generatePolyline(multiData.series1, 500, 200, 100)} fill="none" stroke="#3b82f6" strokeWidth="3" />
+                        <polyline points={generatePolyline(multiData.series2, 500, 200, 100)} fill="none" stroke="#eab308" strokeWidth="3" />
+                        <polyline points={generatePolyline(multiData.series3, 500, 200, 100)} fill="none" stroke="#ef4444" strokeWidth="3" />
                         <line x1="0" y1="200" x2="500" y2="200" stroke={darkMode ? '#4b5563' : '#d1d5db'} strokeWidth="2" />
                         <line x1="0" y1="0" x2="0" y2="200" stroke={darkMode ? '#4b5563' : '#d1d5db'} strokeWidth="2" />
                       </svg>
@@ -709,41 +781,105 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Tabelas de Métricas com Scroll Horizontal no Mobile */}
               <div className={`rounded-2xl shadow-sm border overflow-hidden transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
                 <div className={`p-4 border-b ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-gray-50'}`}>
                   <h2 className="text-lg font-bold">Métricas do Sistema</h2>
                 </div>
                 
-                <div className="grid grid-cols-5 divide-x divide-y md:divide-y-0 text-center">
-                  <div className={`p-4 font-bold text-lg ${darkMode ? 'text-blue-400 border-gray-700' : 'text-blue-600 border-gray-200'}`}>V</div>
-                  <div className={`p-4 font-bold text-lg ${darkMode ? 'text-yellow-400 border-gray-700' : 'text-yellow-600 border-gray-200'}`}>A</div>
-                  <div className={`p-4 font-bold text-lg ${darkMode ? 'text-orange-400 border-gray-700' : 'text-orange-600 border-gray-200'}`}>W</div>
-                  <div className={`p-4 font-bold text-lg ${darkMode ? 'text-purple-400 border-gray-700' : 'text-purple-600 border-gray-200'}`}>T</div>
-                  <div className={`p-4 font-bold text-lg ${darkMode ? 'text-red-400 border-gray-700' : 'text-red-600 border-gray-200'}`}>°C</div>
+                <div className="overflow-x-auto">
+                  <div className="min-w-[700px] flex flex-col">
+                    {/* Primeira Linha*/}
+                    <div className={`flex divide-x border-b ${darkMode ? 'divide-gray-700 border-gray-700' : 'divide-gray-200 border-gray-200'}`}>
+                      {/* VOLTAGEM */}
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Voltagem</span>
+                        <div className="flex items-baseline">
+                          <span className={`text-3xl font-light ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>48.2</span>
+                          <span className={`text-xl font-medium ml-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>V</span>
+                        </div>
+                      </div>
 
-                  <div className={`p-6 text-2xl font-light border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>48.2</div>
-                  <div className={`p-6 text-2xl font-light border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>12.4</div>
-                  <div className={`p-6 text-2xl font-light border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>597.6</div>
-                  <div className={`p-6 text-2xl font-light border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>34.1</div>
-                  <div className={`p-6 text-2xl font-light border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>45.0</div>
-                </div>
+                      {/* CORRENTE */}
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Corrente</span>
+                        <div className="flex items-baseline">
+                          <span className={`text-3xl font-light ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>12.4</span>
+                          <span className={`text-xl font-medium ml-1 ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>A</span>
+                        </div>
+                      </div>
 
-                <div className={`h-px w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                      {/* ROTAÇÃO */}
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Rotação</span>
+                        <div className="flex items-baseline">
+                          <span className={`text-3xl font-light ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{rpm}</span>
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-5 divide-x divide-y md:divide-y-0 text-center">
-                  <div className={`p-4 font-bold text-lg flex justify-center items-center ${darkMode ? 'text-teal-400 border-gray-700' : 'text-teal-600 border-gray-200'}`}>Vel</div>
-                  <div className={`p-4 font-bold text-lg flex justify-center items-center ${darkMode ? 'text-emerald-400 border-gray-700' : 'text-emerald-600 border-gray-200'}`}>RPM</div>
-                  <div className={`p-4 font-bold text-lg flex justify-center items-center ${darkMode ? 'text-indigo-400 border-gray-700' : 'text-indigo-600 border-gray-200'}`}>
-                    <span className="italic font-serif font-black">&beta;</span>
+                      {/* TEMP. */}
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Temp.</span>
+                        <div className="flex items-baseline">
+                          <span className={`text-3xl font-light ${darkMode ? 'text-red-400' : 'text-red-600'}`}>45</span>
+                          <span className={`text-xl font-medium ml-1 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>°C</span>
+                        </div>
+                      </div>
+
+                      {/* BATERIA */}
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Bateria</span>
+                        <div className="flex items-baseline">
+                          <span className={`text-3xl font-bold ${battery > 20 ? 'text-green-500' : 'text-red-500'}`}>{battery}%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Segunda Linha (Restante das Variáveis) */}
+                    <div className={`flex divide-x ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                      {/* VELOCIDADE */}
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Velocidade</span>
+                        <div className="flex items-baseline">
+                          <span className={`text-3xl font-light ${darkMode ? 'text-teal-400' : 'text-teal-600'}`}>{speed.toFixed(1)}</span>
+                          <span className={`text-sm font-medium ml-1.5 ${darkMode ? 'text-teal-400/70' : 'text-teal-600/70'}`}>nós</span>
+                        </div>
+                      </div>
+
+                      {/* POTÊNCIA */}
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Potência</span>
+                        <div className="flex items-baseline">
+                          <span className={`text-3xl font-light ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>597.6</span>
+                          <span className={`text-xl font-medium ml-1 ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>W</span>
+                        </div>
+                      </div>
+
+                      {/* INCLINAÇÃO */}
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Inclinação (β)</span>
+                        <div className="flex items-baseline">
+                          <span className={`text-3xl font-light ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>12°</span>
+                        </div>
+                      </div>
+
+                      {/* S1 */}
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">S1 Status</span>
+                        <div className="flex items-baseline">
+                          <span className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>OK</span>
+                        </div>
+                      </div>
+
+                      {/* S2 */}
+                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">S2 Status</span>
+                        <div className="flex items-baseline">
+                          <span className={`text-2xl font-bold ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>WARN</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className={`p-4 font-bold text-lg flex justify-center items-center ${darkMode ? 'text-pink-400 border-gray-700' : 'text-pink-600 border-gray-200'}`}>S1</div>
-                  <div className={`p-4 font-bold text-lg flex justify-center items-center ${darkMode ? 'text-rose-400 border-gray-700' : 'text-rose-600 border-gray-200'}`}>S2</div>
-
-                  <div className={`p-6 text-2xl font-light border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>{speed.toFixed(1)}<span className="text-sm ml-1 text-gray-500">nós</span></div>
-                  <div className={`p-6 text-2xl font-light border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>{rpm}</div>
-                  <div className={`p-6 text-2xl font-light border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>12°</div>
-                  <div className={`p-6 text-2xl font-light border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>OK</div>
-                  <div className={`p-6 text-2xl font-light border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>WARN</div>
                 </div>
               </div>
             </>
@@ -763,8 +899,8 @@ export default function App() {
                   <div className="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
                   
                   <div className="flex flex-col md:flex-row items-center justify-between relative z-10">
-                     <div className="flex-1 mb-6 md:mb-0 pr-4">
-                        <h3 className="text-lg font-bold mb-2 flex items-center">
+                     <div className="flex-1 mb-6 md:mb-0 md:pr-4 flex flex-col items-center md:items-start text-center md:text-left w-full">
+                        <h3 className="text-lg font-bold mb-2 flex items-center justify-center md:justify-start">
                           <Zap className="mr-2 text-blue-500" size={20} /> 
                           Tempo de Bateria Remanescente
                         </h3>
@@ -772,7 +908,7 @@ export default function App() {
                           Calculado dinamicamente relacionando o nível de carga com o consumo (kW) atual.
                         </p>
                         
-                        <div className="flex flex-wrap gap-4">
+                        <div className="flex flex-wrap justify-center md:justify-start gap-4">
                            <div className={`px-4 py-2 rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                               <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Consumo</p>
                               <p className="text-xl font-bold text-orange-500">{currentPower.toFixed(1)} kW</p>
