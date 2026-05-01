@@ -3,7 +3,8 @@ import {
   Menu, Moon, Sun, User, Activity, 
   BarChart2, Zap, Settings, Database, 
   ArrowLeft, LogOut, Unlock, Trash2, Plus,
-  Info, Shield, AlertTriangle, ChevronDown
+  Info, Shield, AlertTriangle, ChevronDown,
+  Map, MapPin
 } from 'lucide-react';
 
 // --- Mock Data Inicial ---
@@ -108,8 +109,9 @@ export default function App() {
 
   // Estados da Interface do Painel
   const [darkMode, setDarkMode] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // No mobile, false = fechado fora da tela. No desktop, false = retraído.
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pilotMode, setPilotMode] = useState(false);
+  const [showPilotMap, setShowPilotMap] = useState(false); // NOVO ESTADO: Controla o mapa no modo piloto
   const [activeTab, setActiveTab] = useState('Resumo');
   
   // Estado para Cadastro
@@ -154,7 +156,6 @@ export default function App() {
       setRpm(prev => Math.floor(prev + (Math.random() * 50 - 25)));
       setSpeed(prev => Math.max(0, prev + (Math.random() * 0.4 - 0.2)));
       
-      // Drenagem progressiva da bateria
       setBattery(prev => {
         if (prev <= 0) return 100;
         return prev - 1;
@@ -217,7 +218,6 @@ export default function App() {
     setMembers(members.map(m => m.id === id ? { ...m, [field]: value } : m));
   };
 
-  // Calcula total de usuários online
   const onlineCount = members.filter(m => m.isOnline).length;
 
   // ==========================================
@@ -339,15 +339,31 @@ export default function App() {
   // ==========================================
   if (pilotMode) {
     return (
-      <div className="h-screen w-full bg-black text-white flex flex-col p-6 font-sans select-none overflow-hidden relative">
-        <div className="flex justify-between items-center mb-6">
-          <button 
-            onClick={() => setPilotMode(false)} 
-            className="flex items-center space-x-2 text-gray-500 hover:text-white transition-colors p-2"
-          >
-            <ArrowLeft size={32} />
-            <span className="text-xl font-bold uppercase tracking-widest hidden sm:block">Voltar</span>
-          </button>
+      <div className="h-screen w-full bg-black text-white flex flex-col p-4 md:p-6 font-sans select-none overflow-hidden relative">
+        <div className="flex justify-between items-center mb-4 md:mb-6 shrink-0">
+          
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <button 
+              onClick={() => { setPilotMode(false); setShowPilotMap(false); }} 
+              className="flex items-center space-x-2 text-gray-500 hover:text-white transition-colors p-2"
+            >
+              <ArrowLeft size={32} />
+              <span className="text-xl font-bold uppercase tracking-widest hidden sm:block">Voltar</span>
+            </button>
+
+            {/* NOVO BOTÃO DE MAPA DO PILOTO */}
+            <button
+              onClick={() => setShowPilotMap(!showPilotMap)}
+              className={`flex items-center space-x-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold transition-all shadow-lg border ${
+                showPilotMap 
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 shadow-emerald-500/20' 
+                  : 'bg-gray-800/50 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              {showPilotMap ? <Activity size={20} /> : <Map size={20} />}
+              <span className="hidden sm:block text-sm uppercase tracking-wider">{showPilotMap ? 'Instrumentos' : 'Navegação'}</span>
+            </button>
+          </div>
           
           <div className="flex items-center space-x-3 bg-red-950/50 border border-red-900 px-4 py-2 rounded-full">
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]"></div>
@@ -355,53 +371,85 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center gap-8 w-full max-w-4xl mx-auto pb-10">
-          
-          <div className="flex items-center justify-between w-full bg-[#0a0a0a] border-2 border-gray-800 rounded-3xl p-6 md:p-10 shadow-2xl relative">
-            <div className="flex items-center w-full max-w-[70%]">
-              <div className={`relative w-full h-24 md:h-32 border-4 md:border-8 ${batteryBorder} rounded-2xl md:rounded-3xl p-1 md:p-1.5 flex transition-colors duration-500 bg-gray-900`}>
-                <div 
-                  className={`h-full ${batteryFill} rounded-md md:rounded-xl transition-all duration-1000 ease-out`}
-                  style={{ width: `${battery}%` }}
-                ></div>
+        {/* RENDERIZAÇÃO CONDICIONAL: MAPA VS INSTRUMENTOS */}
+        {showPilotMap ? (
+          // VISUALIZAÇÃO DO MAPA NO MODO PILOTO
+          <div className="flex-1 w-full max-w-5xl mx-auto pb-4 md:pb-8 min-h-0 flex flex-col animate-in fade-in duration-300">
+             <div className={`flex-1 rounded-3xl overflow-hidden border-2 border-gray-800 shadow-2xl relative flex items-center justify-center bg-[#0a0a0a]`}>
                 
-                <div className="absolute inset-0 flex items-center justify-center">
-                   <span className="text-6xl md:text-8xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,1)] tracking-tighter">
-                      {battery}
-                   </span>
-                   <span className="text-3xl md:text-5xl font-bold text-gray-200 drop-shadow-[0_4px_4px_rgba(0,0,0,1)] ml-1">
-                      %
-                   </span>
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                
+                <div className="relative z-10 flex flex-col items-center animate-bounce">
+                  <MapPin size={64} className="text-emerald-500 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                  <span className={`mt-4 px-6 py-2 rounded-full text-lg font-bold shadow-[0_0_20px_rgba(0,0,0,0.8)] bg-gray-900 text-white border border-gray-700 uppercase tracking-widest`}>
+                    Posição Atual
+                  </span>
                 </div>
+
+                <div className={`absolute bottom-6 left-6 md:bottom-8 md:left-8 p-4 md:p-6 rounded-2xl border-2 shadow-2xl backdrop-blur-md bg-gray-900/90 border-gray-700 text-white`}>
+                  <p className="text-xs md:text-sm uppercase font-bold text-gray-500 mb-2 md:mb-3 tracking-widest">Coordenadas</p>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 font-mono text-lg md:text-2xl font-bold">
+                    <div>
+                      <span className="text-orange-500 mr-2">LAT</span> -20.2976
+                    </div>
+                    <div>
+                      <span className="text-blue-500 mr-2">LON</span> -40.2958
+                    </div>
+                  </div>
+                </div>
+
+             </div>
+          </div>
+        ) : (
+          // INSTRUMENTOS ORIGINAIS DO MODO PILOTO
+          <div className="flex-1 grid grid-rows-3 gap-4 md:gap-6 w-full max-w-4xl mx-auto pb-4 md:pb-8 min-h-0 animate-in fade-in duration-300">
+            
+            <div className="flex items-center justify-between w-full bg-[#0a0a0a] border-2 border-gray-800 rounded-3xl p-4 md:p-8 shadow-2xl relative h-full min-h-0">
+              <div className="flex items-center w-full max-w-[70%]">
+                <div className={`relative w-full h-16 md:h-24 border-4 md:border-8 ${batteryBorder} rounded-2xl md:rounded-3xl p-1 md:p-1.5 flex transition-colors duration-500 bg-gray-900`}>
+                  <div 
+                    className={`h-full ${batteryFill} rounded-md md:rounded-xl transition-all duration-1000 ease-out`}
+                    style={{ width: `${battery}%` }}
+                  ></div>
+                  
+                  <div className="absolute inset-0 flex items-center justify-center">
+                     <span className="text-5xl md:text-7xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,1)] tracking-tighter">
+                        {battery}
+                     </span>
+                     <span className="text-2xl md:text-4xl font-bold text-gray-200 drop-shadow-[0_4px_4px_rgba(0,0,0,1)] ml-1">
+                        %
+                     </span>
+                  </div>
+                </div>
+                <div className={`w-3 h-8 md:w-4 md:h-10 ${batteryNub} rounded-r-lg -ml-1 transition-colors duration-500`}></div>
               </div>
-              <div className={`w-3 h-10 md:w-4 md:h-14 ${batteryNub} rounded-r-lg -ml-1 transition-colors duration-500`}></div>
+
+              <div className="text-5xl md:text-7xl font-black text-gray-700 ml-4">B</div>
+
+              {battery < 15 && (
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] md:w-3/4 bg-red-600 text-white font-black text-lg md:text-2xl text-center py-2 md:py-3 rounded-full animate-pulse shadow-[0_0_30px_rgba(220,38,38,1)] border-2 border-red-400 tracking-widest uppercase flex items-center justify-center space-x-3 z-10">
+                  <AlertTriangle size={24} className="md:w-7 md:h-7" />
+                  <span>Bateria Muito Baixa</span>
+                </div>
+              )}
             </div>
 
-            <div className="text-6xl md:text-8xl font-black text-gray-700 ml-6">B</div>
-
-            {battery < 15 && (
-              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] md:w-3/4 bg-red-600 text-white font-black text-lg md:text-2xl text-center py-3 rounded-full animate-pulse shadow-[0_0_30px_rgba(220,38,38,1)] border-2 border-red-400 tracking-widest uppercase flex items-center justify-center space-x-3 z-10">
-                <AlertTriangle size={28} />
-                <span>Bateria Muito Baixa</span>
+            <div className="flex items-center justify-between w-full bg-[#0a0a0a] border-2 border-gray-800 rounded-3xl p-4 md:p-8 shadow-2xl relative h-full min-h-0">
+              <div className="flex items-baseline bg-gray-900 px-6 py-4 border border-gray-700 rounded-2xl w-2/3">
+                <span className="text-6xl md:text-8xl font-black text-blue-400 tracking-tighter w-full text-right">{speed.toFixed(1)}</span>
+                <span className="text-2xl md:text-4xl text-blue-600 font-bold ml-4">Nós</span>
               </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between w-full bg-[#0a0a0a] border-2 border-gray-800 rounded-3xl p-6 md:p-10 shadow-2xl relative">
-            <div className="flex items-baseline bg-gray-900 px-8 py-4 border border-gray-700 rounded-2xl w-2/3">
-              <span className="text-7xl md:text-9xl font-black text-blue-400 tracking-tighter w-full text-right">{speed.toFixed(1)}</span>
-              <span className="text-3xl md:text-5xl text-blue-600 font-bold ml-4">Nós</span>
+              <div className="text-5xl md:text-7xl font-black text-gray-700 ml-4">V</div>
             </div>
-            <div className="text-6xl md:text-8xl font-black text-gray-700 ml-6">V</div>
-          </div>
 
-          <div className="flex items-center justify-between w-full bg-[#0a0a0a] border border-gray-800/50 rounded-3xl p-6 md:p-8">
-            <div className="flex items-baseline px-4">
-              <span className="text-5xl md:text-7xl font-black text-orange-400 tracking-tighter">{rpm}</span>
+            <div className="flex items-center justify-between w-full bg-[#0a0a0a] border border-gray-800/50 rounded-3xl p-4 md:p-8 h-full min-h-0">
+              <div className="flex items-baseline px-4">
+                <span className="text-5xl md:text-7xl font-black text-orange-400 tracking-tighter">{rpm}</span>
+              </div>
+              <div className="text-3xl md:text-5xl font-black text-gray-700 ml-4 tracking-widest">RPM</div>
             </div>
-            <div className="text-4xl md:text-5xl font-black text-gray-700 ml-6 tracking-widest">RPM</div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -422,7 +470,7 @@ export default function App() {
   return (
     <div className={`flex h-screen w-full transition-colors duration-300 font-sans overflow-hidden ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>
       
-      {/* OVERLAY PARA MOBILE (Escurece o fundo quando o menu abre) */}
+      {/* OVERLAY PARA MOBILE */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity"
@@ -446,7 +494,6 @@ export default function App() {
             onClick={() => setSidebarOpen(!sidebarOpen)} 
             className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0"
           >
-            {/* Ícone de menu no desktop, seta de voltar no mobile */}
             <Menu size={24} className="hidden md:block" />
             <ArrowLeft size={24} className="md:hidden" />
           </button>
@@ -456,6 +503,7 @@ export default function App() {
           <ul className="space-y-2 px-2">
             {[
               { icon: Activity, label: 'Resumo' },
+              { icon: Map, label: 'Mapa' },
               { icon: BarChart2, label: 'Análise' },
               { icon: Zap, label: 'Potência' },
               { icon: Database, label: 'Logs de Dados' },
@@ -465,7 +513,6 @@ export default function App() {
                 <button 
                   onClick={() => {
                     setActiveTab(item.label);
-                    // Fecha automaticamente a sidebar no mobile ao clicar em um link
                     if (window.innerWidth < 768) {
                       setSidebarOpen(false);
                     }
@@ -495,7 +542,6 @@ export default function App() {
         {/* TOP HEADER */}
         <header className={`h-16 flex items-center justify-between px-4 md:px-8 border-b transition-colors duration-300 shrink-0 ${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white/50 border-gray-200'} backdrop-blur-md`}>
           <div className="flex items-center min-w-0 mr-4">
-             {/* BOTÃO DO MENU NO MOBILE */}
              <button 
                onClick={() => setSidebarOpen(true)}
                className="md:hidden mr-3 p-2 -ml-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300"
@@ -557,16 +603,15 @@ export default function App() {
                 <span>Sair</span>
               </button>
             </div>
-
           </div>
         </header>
 
         {/* CONTEÚDO DINÂMICO BASEADO NA ABA */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
           
           {activeTab === 'Configurações' ? (
             <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center justify-between mb-8">
+               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-orange-500/10 rounded-2xl">
                     <Settings className="text-orange-500" size={28} />
@@ -724,13 +769,16 @@ export default function App() {
                   )}
                 </div>
               </div>
-
             </div>
           ) : activeTab === 'Resumo' ? (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div className={`lg:col-span-2 rounded-2xl p-6 shadow-sm border transition-colors duration-300 flex flex-col ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                  <div className="flex justify-between items-center mb-4">
+            
+            // CONTAINER PRINCIPAL: flex flex-col e h-full forçam as coisas a dividirem o espaço disponível
+            <div className="flex flex-col h-full gap-4 md:gap-6 pb-2">
+              
+              {/* GRÁFICOS: Escondidos no Mobile, flex-1 min-h-0 forçam eles a absorverem exatamente o espaço sobrando e encolherem se preciso */}
+              <div className="hidden md:flex gap-4 md:gap-6 flex-1 min-h-0">
+                <div className={`flex-[2] rounded-2xl p-4 md:p-6 shadow-sm border transition-colors duration-300 flex flex-col h-full ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                  <div className="flex justify-between items-center mb-2">
                     <h2 className="text-lg font-bold flex items-center">
                       <Activity className="mr-2 text-orange-500" size={20} />
                       Desempenho Principal (Tempo Real)
@@ -740,7 +788,7 @@ export default function App() {
                     </span>
                   </div>
                   
-                  <div className="flex-1 w-full h-64 relative mt-2">
+                  <div className="flex-1 w-full relative mt-2 min-h-[100px]">
                     <svg viewBox="0 0 1000 200" preserveAspectRatio="none" className="w-full h-full overflow-visible">
                       <defs>
                         <linearGradient id="mainGradient" x1="0" x2="0" y1="0" y2="1">
@@ -759,9 +807,9 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className={`rounded-2xl p-6 shadow-sm border transition-colors duration-300 flex flex-col ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                   <h2 className="text-lg font-bold mb-4">Comparativo de Sensores</h2>
-                   <div className="flex-1 w-full h-full relative min-h-[200px]">
+                <div className={`flex-[1] rounded-2xl p-4 md:p-6 shadow-sm border transition-colors duration-300 flex flex-col h-full ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                   <h2 className="text-lg font-bold mb-2">Comparativo de Sensores</h2>
+                   <div className="flex-1 w-full relative min-h-[100px]">
                       <svg viewBox="0 0 500 200" preserveAspectRatio="none" className="w-full h-full">
                         {[50, 100, 150].map(y => (
                           <line key={`grid2-${y}`} x1="0" y1={y} x2="500" y2={y} stroke={darkMode ? '#374151' : '#f3f4f6'} strokeWidth="1" />
@@ -773,7 +821,7 @@ export default function App() {
                         <line x1="0" y1="0" x2="0" y2="200" stroke={darkMode ? '#4b5563' : '#d1d5db'} strokeWidth="2" />
                       </svg>
                    </div>
-                   <div className="flex justify-center space-x-4 mt-4 text-xs font-medium">
+                   <div className="flex justify-center space-x-4 mt-2 text-xs font-medium">
                       <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div> Motor</div>
                       <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div> Bateria</div>
                       <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div> Placas</div>
@@ -781,108 +829,132 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Tabelas de Métricas com Scroll Horizontal no Mobile */}
-              <div className={`rounded-2xl shadow-sm border overflow-hidden transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                <div className={`p-4 border-b ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-gray-50'}`}>
+              {/* TABELAS DE MÉTRICAS: shrink-0 força o container a amarrar no rodapé sem deixar nada rolar */}
+              <div className={`shrink-0 rounded-2xl shadow-sm overflow-hidden transition-colors duration-300 w-full ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                <div className={`p-3 lg:p-4 border-b ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-gray-50'}`}>
                   <h2 className="text-lg font-bold">Métricas do Sistema</h2>
                 </div>
                 
-                <div className="overflow-x-auto">
-                  <div className="min-w-[700px] flex flex-col">
-                    {/* Primeira Linha*/}
-                    <div className={`flex divide-x border-b ${darkMode ? 'divide-gray-700 border-gray-700' : 'divide-gray-200 border-gray-200'}`}>
-                      {/* VOLTAGEM */}
-                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Voltagem</span>
-                        <div className="flex items-baseline">
-                          <span className={`text-3xl font-light ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>48.2</span>
-                          <span className={`text-xl font-medium ml-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>V</span>
-                        </div>
-                      </div>
-
-                      {/* CORRENTE */}
-                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Corrente</span>
-                        <div className="flex items-baseline">
-                          <span className={`text-3xl font-light ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>12.4</span>
-                          <span className={`text-xl font-medium ml-1 ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>A</span>
-                        </div>
-                      </div>
-
-                      {/* ROTAÇÃO */}
-                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Rotação</span>
-                        <div className="flex items-baseline">
-                          <span className={`text-3xl font-light ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{rpm}</span>
-                        </div>
-                      </div>
-
-                      {/* TEMP. */}
-                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Temp.</span>
-                        <div className="flex items-baseline">
-                          <span className={`text-3xl font-light ${darkMode ? 'text-red-400' : 'text-red-600'}`}>45</span>
-                          <span className={`text-xl font-medium ml-1 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>°C</span>
-                        </div>
-                      </div>
-
-                      {/* BATERIA */}
-                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Bateria</span>
-                        <div className="flex items-baseline">
-                          <span className={`text-3xl font-bold ${battery > 20 ? 'text-green-500' : 'text-red-500'}`}>{battery}%</span>
-                        </div>
-                      </div>
+                <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-[1px] w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                  
+                  {/* Itens com padding reduzido para garantir que caiba verticalmente em monitores menores */}
+                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Voltagem</span>
+                    <div className="flex items-baseline">
+                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>48.2</span>
+                      <span className={`text-lg lg:text-xl font-medium ml-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>V</span>
                     </div>
+                  </div>
 
-                    {/* Segunda Linha (Restante das Variáveis) */}
-                    <div className={`flex divide-x ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                      {/* VELOCIDADE */}
-                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Velocidade</span>
-                        <div className="flex items-baseline">
-                          <span className={`text-3xl font-light ${darkMode ? 'text-teal-400' : 'text-teal-600'}`}>{speed.toFixed(1)}</span>
-                          <span className={`text-sm font-medium ml-1.5 ${darkMode ? 'text-teal-400/70' : 'text-teal-600/70'}`}>nós</span>
-                        </div>
+                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Corrente</span>
+                    <div className="flex items-baseline">
+                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>12.4</span>
+                      <span className={`text-lg lg:text-xl font-medium ml-1 ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>A</span>
+                    </div>
+                  </div>
+
+                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Rotação</span>
+                    <div className="flex items-baseline">
+                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{rpm}</span>
+                    </div>
+                  </div>
+
+                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Temp.</span>
+                    <div className="flex items-baseline">
+                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-red-400' : 'text-red-600'}`}>45</span>
+                      <span className={`text-lg lg:text-xl font-medium ml-1 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>°C</span>
+                    </div>
+                  </div>
+
+                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Bateria</span>
+                    <div className="flex items-baseline">
+                      <span className={`text-2xl lg:text-3xl font-bold ${battery > 20 ? 'text-green-500' : 'text-red-500'}`}>{battery}%</span>
+                    </div>
+                  </div>
+
+                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Velocidade</span>
+                    <div className="flex items-baseline">
+                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-teal-400' : 'text-teal-600'}`}>{speed.toFixed(1)}</span>
+                      <span className={`text-xs lg:text-sm font-medium ml-1.5 ${darkMode ? 'text-teal-400/70' : 'text-teal-600/70'}`}>nós</span>
+                    </div>
+                  </div>
+
+                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Potência</span>
+                    <div className="flex items-baseline">
+                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>597.6</span>
+                      <span className={`text-lg lg:text-xl font-medium ml-1 ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>W</span>
+                    </div>
+                  </div>
+
+                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Inclinação (β)</span>
+                    <div className="flex items-baseline">
+                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>12°</span>
+                    </div>
+                  </div>
+
+                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">S1 Status</span>
+                    <div className="flex items-baseline">
+                      <span className={`text-xl lg:text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>OK</span>
+                    </div>
+                  </div>
+
+                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">S2 Status</span>
+                    <div className="flex items-baseline">
+                      <span className={`text-xl lg:text-2xl font-bold ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>WARN</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'Mapa' ? (
+            <div className="max-w-6xl mx-auto h-[80vh] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+               <div className="flex items-center space-x-3 mb-6 shrink-0">
+                  <div className="p-3 bg-emerald-500/10 rounded-2xl">
+                    <Map className="text-emerald-500" size={28} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Rastreamento GPS</h2>
+                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Posicionamento do barco em tempo real</p>
+                  </div>
+               </div>
+
+               {/* Container do Mapa */}
+               <div className={`flex-1 rounded-3xl overflow-hidden border shadow-sm relative flex items-center justify-center transition-colors duration-300 ${darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-200 border-gray-300'}`}>
+                  
+                  <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                  
+                  <div className="relative z-10 flex flex-col items-center animate-bounce">
+                    <MapPin size={48} className="text-orange-500 drop-shadow-lg" />
+                    <span className={`mt-2 px-4 py-1.5 rounded-full text-sm font-bold shadow-lg ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
+                      Solares Atual
+                    </span>
+                  </div>
+
+                  {/* Card flutuante de coordenadas */}
+                  <div className={`absolute bottom-6 left-6 p-4 rounded-2xl border shadow-lg backdrop-blur-md ${darkMode ? 'bg-gray-900/80 border-gray-700 text-white' : 'bg-white/80 border-gray-200 text-gray-800'}`}>
+                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-2">Coordenadas</p>
+                    <div className="flex gap-4 font-mono text-sm">
+                      <div>
+                        <span className="text-orange-500 mr-1">LAT</span> -20.2976
                       </div>
-
-                      {/* POTÊNCIA */}
-                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Potência</span>
-                        <div className="flex items-baseline">
-                          <span className={`text-3xl font-light ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>597.6</span>
-                          <span className={`text-xl font-medium ml-1 ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>W</span>
-                        </div>
-                      </div>
-
-                      {/* INCLINAÇÃO */}
-                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">Inclinação (β)</span>
-                        <div className="flex items-baseline">
-                          <span className={`text-3xl font-light ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>12°</span>
-                        </div>
-                      </div>
-
-                      {/* S1 */}
-                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">S1 Status</span>
-                        <div className="flex items-baseline">
-                          <span className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>OK</span>
-                        </div>
-                      </div>
-
-                      {/* S2 */}
-                      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-2">S2 Status</span>
-                        <div className="flex items-baseline">
-                          <span className={`text-2xl font-bold ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>WARN</span>
-                        </div>
+                      <div>
+                        <span className="text-blue-500 mr-1">LON</span> -40.2958
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </>
+
+               </div>
+            </div>
           ) : activeTab === 'Análise' ? (
             <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
                <div className="flex items-center space-x-3 mb-8">
