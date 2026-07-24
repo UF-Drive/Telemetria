@@ -1,22 +1,35 @@
+// #region -- Bibliotecas Importadas ---
 import React, { useState, useEffect } from 'react';
 import { 
   Menu, Moon, Sun, User, Activity, 
   BarChart2, Zap, Settings, Database, 
   ArrowLeft, LogOut, Unlock, Trash2, Plus,
   Info, Shield, AlertTriangle, ChevronDown,
-  Map, MapPin
+  Map, MapPin, Clock, Battery, BatteryCharging,
+  Thermometer
 } from 'lucide-react';
+// #endregion
 
-// --- Mock Data Inicial ---
+// #region --- Mock Data Inicial ---
 const initialMainData = Array.from({ length: 40 }, () => Math.floor(Math.random() * 50) + 20);
 const initialMultiData = {
   series1: Array.from({ length: 20 }, () => Math.floor(Math.random() * 30) + 60),
   series2: Array.from({ length: 20 }, () => Math.floor(Math.random() * 40) + 20),
   series3: Array.from({ length: 20 }, () => Math.floor(Math.random() * 20) + 5),
 };
+// #endregion
 
-// Criando Modelo de Usuário
+// #region --- Gerador de Células Iniciais para o BMS ---
+const generateInitialCells = (count: number) => {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    voltage: 3.7 + (Math.random() * 0.1 - 0.05),
+    temperature: 35 + (Math.random() * 5 - 2.5),
+  }));
+};
+// #endregion
 
+// #region --- Criando Modelo de Usuário ---
 interface Member {
   id: number;
   email: string;
@@ -27,8 +40,9 @@ interface Member {
   isOnline?: boolean;
   lastSeen?: string;
 }
+// #endregion
 
-// --- Mock da Equipe (com a estrutura de Roles e Status) ---
+// #region --- Mock da Equipe ---
 const initialMembers = [
   { 
     id: 1, 
@@ -61,8 +75,9 @@ const initialMembers = [
     lastSeen: "há 2 horas"
   }
 ];
+// #endregion
 
-// --- Funções Auxiliares ---
+// #region --- Funções Auxiliares ---
 const generatePolyline = (data: number[], width: number, height: number, maxVal: number) => {
   const stepX = width / (data.length - 1);
   return data.map((val: number, index: number) => {
@@ -76,8 +91,9 @@ const generateNameFromEmail = (email: string) => {
   const prefix = email.split('@')[0];
   return prefix.split('.').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
 };
+// #endregion
 
-// --- Ícones Customizados ---
+// #region --- Ícones Customizados ---
 const SteeringWheelIcon = ({ size = 20, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <circle cx="12" cy="12" r="9" />
@@ -96,37 +112,40 @@ const GoogleIcon = ({ size = 24 }) => (
     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
   </svg>
 );
+// #endregion
 
 export default function App() {
+  // #region Estados - Controle de Usuário e Login
   const [members, setMembers] = useState(initialMembers);
   const [currentUser, setCurrentUser] = useState<Member | null>(null);
-  
-  // Estados da Tela de Login
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberRole, setNewMemberRole] = useState('');
+  const [newMemberIsMod, setNewMemberIsMod] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showUnlockAnim, setShowUnlockAnim] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [showModInfo, setShowModInfo] = useState(false);
+  // #endregion
 
-  // Estados da Interface do Painel
+  // #region Estados - Interface e Navegação
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pilotMode, setPilotMode] = useState(false);
-  const [showPilotMap, setShowPilotMap] = useState(false); // NOVO ESTADO: Controla o mapa no modo piloto
+  const [showPilotMap, setShowPilotMap] = useState(false); 
   const [activeTab, setActiveTab] = useState('Resumo');
-  
-  // Estado para Cadastro
-  const [newMemberEmail, setNewMemberEmail] = useState('');
-  const [newMemberRole, setNewMemberRole] = useState('');
-  const [newMemberIsMod, setNewMemberIsMod] = useState(false);
+  // #endregion
 
-  // Estados de Dados
+  // #region Estados - Dados de Telemetria
   const [mainData, setMainData] = useState(initialMainData);
   const [multiData, setMultiData] = useState(initialMultiData);
   const [rpm, setRpm] = useState(1450);
-  const [speed, setSpeed] = useState(10);
+  const [cells, setCells] = useState(generateInitialCells(24));
+  const [speed, setSpeed] = useState(5); 
   const [battery, setBattery] = useState(100);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  // #endregion
 
-  // Controle Global do Modo Noturno
+  // #region Efeitos
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -135,7 +154,11 @@ export default function App() {
     }
   }, [darkMode]);
 
-  // Simulação de telemetria em tempo real
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     if (!currentUser) return; 
 
@@ -154,17 +177,33 @@ export default function App() {
       }));
 
       setRpm(prev => Math.floor(prev + (Math.random() * 50 - 25)));
-      setSpeed(prev => Math.max(0, prev + (Math.random() * 0.4 - 0.2)));
+      
+      setSpeed(prev => {
+        let variation = prev + (Math.random() * 2 - 1);
+        let nextSpeed = Math.round(variation);
+        if (nextSpeed > 10) return 9; 
+        if (nextSpeed < 0) return 1; 
+        return nextSpeed;
+      });
       
       setBattery(prev => {
         if (prev <= 0) return 100;
         return prev - 1;
       });
+
+      setCells(prev => prev.map(cell => ({
+        ...cell,
+        voltage: Math.max(3.0, Math.min(4.2, cell.voltage + (Math.random() * 0.04 - 0.02))),
+        temperature: Math.max(20, Math.min(60, cell.temperature + (Math.random() * 0.6 - 0.3)))
+      })));
+
     }, 1000);
+
     return () => clearInterval(interval);
   }, [currentUser]);
+  // #endregion
 
-  // Lógica de Login Simulado
+  // #region Funções de Usuário
   const handleGoogleLogin = (simulateError = false) => {
     setIsLoggingIn(true);
     setLoginError("");
@@ -187,7 +226,6 @@ export default function App() {
     }, 1500);
   };
 
-  // Funções de Gerenciamento de Equipe
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
     if(!newMemberEmail) return;
@@ -217,15 +255,32 @@ export default function App() {
   const handleUpdateMemberRole = (id: number, field: keyof Member, value: string | boolean) => {
     setMembers(members.map(m => m.id === id ? { ...m, [field]: value } : m));
   };
+  // #endregion
+
+  // #region Cálculos Derivados
+  const totalBmsVoltage = cells.reduce((acc, cell) => acc + cell.voltage, 0);
+  const avgBmsTemp = cells.reduce((acc, cell) => acc + cell.temperature, 0) / cells.length;
+  const maxVoltageCell = [...cells].sort((a, b) => b.voltage - a.voltage)[0];
+  const minVoltageCell = [...cells].sort((a, b) => a.voltage - b.voltage)[0];
+  const voltageImbalance = maxVoltageCell.voltage - minVoltageCell.voltage;
 
   const onlineCount = members.filter(m => m.isOnline).length;
+  const brasiliaTime = currentTime.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
-  // ==========================================
-  // VIEW: TELA DE LOGIN
-  // ==========================================
+  const currentPower = mainData[mainData.length - 1] || 1;
+  const estimatedTimeRaw = (battery / Math.max(10, currentPower)) * 2.5;
+  const estHours = Math.floor(estimatedTimeRaw);
+  const estMinutes = Math.floor((estimatedTimeRaw - estHours) * 60);
+
+  const userProfileSubtitle = currentUser?.isModerador 
+    ? (currentUser.mainRole ? `${currentUser.mainRole} | Mod` : 'Moderador') 
+    : (currentUser?.mainRole || 'Membro');
+  // #endregion
+
+  // #region Renderização: Tela de Login
   if (!currentUser) {
     const moderatorsList = members.filter(m => m.isModerador);
-
+  
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-gray-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black text-white font-sans p-4 relative overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 blur-[100px] rounded-full"></div>
@@ -283,7 +338,7 @@ export default function App() {
               </button>
             </div>
           )}
-
+          
           {!showUnlockAnim && (
             <div className="mt-8 w-full border-t border-gray-700/50 pt-4 flex flex-col items-center">
               <button 
@@ -316,10 +371,8 @@ export default function App() {
       </div>
     );
   }
-
-  // ==========================================
-  // LÓGICA DE CORES DA BATERIA (MODO PILOTO)
-  // ==========================================
+  // #endregion
+  
   let batteryFill = 'bg-emerald-500';
   let batteryBorder = 'border-emerald-600';
   let batteryNub = 'bg-emerald-700';
@@ -334,60 +387,67 @@ export default function App() {
     batteryNub = 'bg-red-800';
   }
 
-  // ==========================================
-  // VIEW: MODO PILOTO
-  // ==========================================
+  // #region Renderização: Modo Piloto
   if (pilotMode) {
     return (
-      <div className="h-screen w-full bg-black text-white flex flex-col p-4 md:p-6 font-sans select-none overflow-hidden relative">
+      <div className={`h-screen w-full flex flex-col p-4 md:p-6 font-sans select-none overflow-hidden relative transition-colors duration-300 ${darkMode ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'}`}>
         <div className="flex justify-between items-center mb-4 md:mb-6 shrink-0">
           
           <div className="flex items-center space-x-2 md:space-x-4">
             <button 
               onClick={() => { setPilotMode(false); setShowPilotMap(false); }} 
-              className="flex items-center space-x-2 text-gray-500 hover:text-white transition-colors p-2"
+              className={`flex items-center space-x-2 transition-colors p-2 rounded-lg ${darkMode ? 'text-gray-500 hover:text-white hover:bg-gray-900' : 'text-gray-600 hover:text-black hover:bg-gray-200'}`}
             >
               <ArrowLeft size={32} />
               <span className="text-xl font-bold uppercase tracking-widest hidden sm:block">Voltar</span>
             </button>
 
-            {/* NOVO BOTÃO DE MAPA DO PILOTO */}
             <button
               onClick={() => setShowPilotMap(!showPilotMap)}
-              className={`flex items-center space-x-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold transition-all shadow-lg border ${
+              className={`flex items-center space-x-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold transition-all shadow-md border ${
                 showPilotMap 
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 shadow-emerald-500/20' 
-                  : 'bg-gray-800/50 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-white'
+                  ? (darkMode ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 shadow-emerald-500/20' : 'bg-emerald-100 text-emerald-600 border-emerald-500')
+                  : (darkMode ? 'bg-gray-800/50 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-white' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-gray-900')
               }`}
             >
               {showPilotMap ? <Activity size={20} /> : <Map size={20} />}
               <span className="hidden sm:block text-sm uppercase tracking-wider">{showPilotMap ? 'Instrumentos' : 'Navegação'}</span>
             </button>
+
+            <button 
+              onClick={() => setDarkMode(!darkMode)} 
+              className={`p-2 flex-shrink-0 rounded-full transition-all shadow-md border ${
+                darkMode 
+                  ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white' 
+                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+              title="Alternar Modo de Visualização"
+            >
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
           </div>
           
-          <div className="flex items-center space-x-3 bg-red-950/50 border border-red-900 px-4 py-2 rounded-full">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]"></div>
+          <div className={`flex items-center space-x-3 px-4 py-2 rounded-full border ${darkMode ? 'bg-red-950/50 border-red-900' : 'bg-red-100 border-red-300'}`}>
+            <div className={`w-3 h-3 bg-red-500 rounded-full animate-pulse ${darkMode ? 'shadow-[0_0_10px_rgba(239,68,68,0.8)]' : ''}`}></div>
             <span className="text-red-500 font-bold tracking-widest text-sm">TELEMETRIA ATIVA</span>
           </div>
         </div>
 
-        {/* RENDERIZAÇÃO CONDICIONAL: MAPA VS INSTRUMENTOS */}
         {showPilotMap ? (
-          // VISUALIZAÇÃO DO MAPA NO MODO PILOTO
           <div className="flex-1 w-full max-w-5xl mx-auto pb-4 md:pb-8 min-h-0 flex flex-col animate-in fade-in duration-300">
-             <div className={`flex-1 rounded-3xl overflow-hidden border-2 border-gray-800 shadow-2xl relative flex items-center justify-center bg-[#0a0a0a]`}>
+             <div className={`flex-1 rounded-3xl overflow-hidden border-2 shadow-2xl relative flex items-center justify-center transition-colors ${darkMode ? 'bg-[#0a0a0a] border-gray-800' : 'bg-white border-gray-300'}`}>
                 
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                <div className={`absolute inset-0 ${darkMode ? 'opacity-10' : 'opacity-[0.03]'} bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]`}></div>
                 
                 <div className="relative z-10 flex flex-col items-center animate-bounce">
                   <MapPin size={64} className="text-emerald-500 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                  <span className={`mt-4 px-6 py-2 rounded-full text-lg font-bold shadow-[0_0_20px_rgba(0,0,0,0.8)] bg-gray-900 text-white border border-gray-700 uppercase tracking-widest`}>
+                  <span className={`mt-4 px-6 py-2 rounded-full text-lg font-bold shadow-lg border uppercase tracking-widest ${darkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'}`}>
                     Posição Atual
                   </span>
                 </div>
 
-                <div className={`absolute bottom-6 left-6 md:bottom-8 md:left-8 p-4 md:p-6 rounded-2xl border-2 shadow-2xl backdrop-blur-md bg-gray-900/90 border-gray-700 text-white`}>
-                  <p className="text-xs md:text-sm uppercase font-bold text-gray-500 mb-2 md:mb-3 tracking-widest">Coordenadas</p>
+                <div className={`absolute bottom-6 left-6 md:bottom-8 md:left-8 p-4 md:p-6 rounded-2xl border-2 shadow-2xl backdrop-blur-md transition-colors ${darkMode ? 'bg-gray-900/90 border-gray-700 text-white' : 'bg-white/90 border-gray-300 text-gray-900'}`}>
+                  <p className={`text-xs md:text-sm uppercase font-bold mb-2 md:mb-3 tracking-widest ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>Coordenadas</p>
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 font-mono text-lg md:text-2xl font-bold">
                     <div>
                       <span className="text-orange-500 mr-2">LAT</span> -20.2976
@@ -401,30 +461,31 @@ export default function App() {
              </div>
           </div>
         ) : (
-          // INSTRUMENTOS ORIGINAIS DO MODO PILOTO
           <div className="flex-1 grid grid-rows-3 gap-4 md:gap-6 w-full max-w-4xl mx-auto pb-4 md:pb-8 min-h-0 animate-in fade-in duration-300">
             
-            <div className="flex items-center justify-between w-full bg-[#0a0a0a] border-2 border-gray-800 rounded-3xl p-4 md:p-8 shadow-2xl relative h-full min-h-0">
+            <div className={`flex items-center justify-between w-full border-2 rounded-3xl p-4 md:p-8 shadow-2xl relative h-full min-h-0 transition-colors ${darkMode ? 'bg-[#0a0a0a] border-gray-800' : 'bg-white border-gray-300'}`}>
               <div className="flex items-center w-full max-w-[70%]">
-                <div className={`relative w-full h-16 md:h-24 border-4 md:border-8 ${batteryBorder} rounded-2xl md:rounded-3xl p-1 md:p-1.5 flex transition-colors duration-500 bg-gray-900`}>
+                <div className={`relative w-full h-16 md:h-24 border-4 md:border-8 ${batteryBorder} rounded-2xl md:rounded-3xl p-1 md:p-1.5 flex transition-colors duration-500 ${darkMode ? 'bg-gray-900' : 'bg-gray-200'}`}>
                   <div 
                     className={`h-full ${batteryFill} rounded-md md:rounded-xl transition-all duration-1000 ease-out`}
                     style={{ width: `${battery}%` }}
                   ></div>
                   
                   <div className="absolute inset-0 flex items-center justify-center">
-                     <span className="text-5xl md:text-7xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,1)] tracking-tighter">
-                        {battery}
-                     </span>
-                     <span className="text-2xl md:text-4xl font-bold text-gray-200 drop-shadow-[0_4px_4px_rgba(0,0,0,1)] ml-1">
-                        %
-                     </span>
+                    <div className="flex items-baseline -translate-y-[2px] md:-translate-y-[4px]">
+                       <span className="text-5xl md:text-7xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,1)] tracking-tighter leading-none">
+                          {battery}
+                       </span>
+                       <span className="text-2xl md:text-4xl font-bold text-gray-200 drop-shadow-[0_4px_4px_rgba(0,0,0,1)] ml-1 leading-none">
+                          %
+                       </span>
+                    </div>
                   </div>
                 </div>
                 <div className={`w-3 h-8 md:w-4 md:h-10 ${batteryNub} rounded-r-lg -ml-1 transition-colors duration-500`}></div>
               </div>
 
-              <div className="text-5xl md:text-7xl font-black text-gray-700 ml-4">B</div>
+              <div className={`text-5xl md:text-7xl font-black ml-4 ${darkMode ? 'text-gray-700' : 'text-gray-300'}`}>B</div>
 
               {battery < 15 && (
                 <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] md:w-3/4 bg-red-600 text-white font-black text-lg md:text-2xl text-center py-2 md:py-3 rounded-full animate-pulse shadow-[0_0_30px_rgba(220,38,38,1)] border-2 border-red-400 tracking-widest uppercase flex items-center justify-center space-x-3 z-10">
@@ -434,43 +495,32 @@ export default function App() {
               )}
             </div>
 
-            <div className="flex items-center justify-between w-full bg-[#0a0a0a] border-2 border-gray-800 rounded-3xl p-4 md:p-8 shadow-2xl relative h-full min-h-0">
-              <div className="flex items-baseline bg-gray-900 px-6 py-4 border border-gray-700 rounded-2xl w-2/3">
-                <span className="text-6xl md:text-8xl font-black text-blue-400 tracking-tighter w-full text-right">{speed.toFixed(1)}</span>
-                <span className="text-2xl md:text-4xl text-blue-600 font-bold ml-4">Nós</span>
+            <div className={`flex items-center justify-between w-full border-2 rounded-3xl p-4 md:p-8 shadow-2xl relative h-full min-h-0 transition-colors ${darkMode ? 'bg-[#0a0a0a] border-gray-800' : 'bg-white border-gray-300'}`}>
+              <div className="flex items-baseline px-4 w-2/3">
+                <span className="text-6xl md:text-8xl font-black text-blue-400 tracking-tighter w-full">{speed}</span>
               </div>
-              <div className="text-5xl md:text-7xl font-black text-gray-700 ml-4">V</div>
+              <div className={`text-5xl md:text-7xl font-black ml-4 ${darkMode ? 'text-gray-700' : 'text-gray-300'}`}>V</div>
             </div>
 
-            <div className="flex items-center justify-between w-full bg-[#0a0a0a] border border-gray-800/50 rounded-3xl p-4 md:p-8 h-full min-h-0">
+            <div className={`flex items-center justify-between w-full border-2 rounded-3xl p-4 md:p-8 shadow-2xl relative h-full min-h-0 transition-colors ${darkMode ? 'bg-[#0a0a0a] border-gray-800' : 'bg-white border-gray-300'}`}>
               <div className="flex items-baseline px-4">
-                <span className="text-5xl md:text-7xl font-black text-orange-400 tracking-tighter">{rpm}</span>
+                <span className="text-5xl md:text-7xl font-black text-orange-400 tracking-tighter">{brasiliaTime}</span>
               </div>
-              <div className="text-3xl md:text-5xl font-black text-gray-700 ml-4 tracking-widest">RPM</div>
+              <div className={`ml-4 ${darkMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                <Clock className="w-12 h-12 md:w-16 md:h-16" strokeWidth={2.5} />
+              </div>
             </div>
           </div>
         )}
       </div>
     );
   }
+  // #endregion
 
-  // ==========================================
-  // VIEW: DASHBOARD
-  // ==========================================
-  
-  const userProfileSubtitle = currentUser.isModerador 
-    ? (currentUser.mainRole ? `${currentUser.mainRole} | Mod` : 'Moderador') 
-    : (currentUser.mainRole || 'Membro');
-
-  const currentPower = mainData[mainData.length - 1] || 1;
-  const estimatedTimeRaw = (battery / Math.max(10, currentPower)) * 2.5;
-  const estHours = Math.floor(estimatedTimeRaw);
-  const estMinutes = Math.floor((estimatedTimeRaw - estHours) * 60);
-
+  // #region Renderização: Dashboard Engenharia
   return (
     <div className={`flex h-screen w-full transition-colors duration-300 font-sans overflow-hidden ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>
       
-      {/* OVERLAY PARA MOBILE */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity"
@@ -478,7 +528,7 @@ export default function App() {
         />
       )}
 
-      {/* SIDEBAR RESPONSIVA */}
+      {/* #region Menu Lateral (Sidebar) */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'} 
@@ -503,6 +553,7 @@ export default function App() {
           <ul className="space-y-2 px-2">
             {[
               { icon: Activity, label: 'Resumo' },
+              { icon: Battery, label: 'Baterias' },
               { icon: Map, label: 'Mapa' },
               { icon: BarChart2, label: 'Análise' },
               { icon: Zap, label: 'Potência' },
@@ -535,11 +586,11 @@ export default function App() {
           </ul>
         </nav>
       </aside>
+      {/* #endregion */}
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
-        
-        {/* TOP HEADER */}
+      
+        {/* #region Cabeçalho (Header) */}
         <header className={`h-16 flex items-center justify-between px-4 md:px-8 border-b transition-colors duration-300 shrink-0 ${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white/50 border-gray-200'} backdrop-blur-md`}>
           <div className="flex items-center min-w-0 mr-4">
              <button 
@@ -570,7 +621,10 @@ export default function App() {
             </button>
             
             <button 
-              onClick={() => setPilotMode(true)}
+              onClick={() => {
+                setDarkMode(true);
+                setPilotMode(true);
+              }}
               className="flex items-center space-x-2 px-4 md:px-5 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full font-bold shadow-lg shadow-orange-500/40 hover:scale-105 hover:shadow-orange-500/60 transition-all active:scale-95 whitespace-nowrap"
             >
               <SteeringWheelIcon size={18} />
@@ -605,12 +659,109 @@ export default function App() {
             </div>
           </div>
         </header>
+        {/* #endregion */}
 
-        {/* CONTEÚDO DINÂMICO BASEADO NA ABA */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
-          
-          {activeTab === 'Configurações' ? (
+
+          {activeTab === 'Baterias' ? (
+            <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* #region Aba Baterias */}
+              <div className="flex items-center space-x-3 mb-8">
+                <div className="p-3 bg-orange-500/10 rounded-2xl">
+                  <BatteryCharging className="text-orange-500" size={28} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Diagnóstico do BMS</h2>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Monitoramento individual de células e status geral do pack de bateria.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className={`rounded-3xl p-6 shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                  <h3 className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">Tensão Total (Pack)</h3>
+                  <div className="flex items-baseline">
+                    <span className="text-4xl font-black text-blue-500">{totalBmsVoltage.toFixed(1)}</span>
+                    <span className="text-xl font-bold ml-1 text-blue-500">V</span>
+                  </div>
+                </div>
+
+                <div className={`rounded-3xl p-6 shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                  <h3 className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">Desbalanceamento (ΔV)</h3>
+                  <div className="flex items-baseline">
+                    <span className={`text-4xl font-black ${voltageImbalance > 0.15 ? 'text-red-500' : 'text-green-500'}`}>
+                      {voltageImbalance.toFixed(3)}
+                    </span>
+                    <span className={`text-xl font-bold ml-1 ${voltageImbalance > 0.15 ? 'text-red-500' : 'text-green-500'}`}>V</span>
+                  </div>
+                </div>
+
+                <div className={`rounded-3xl p-6 shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                  <h3 className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">Temperatura Média</h3>
+                  <div className="flex items-baseline">
+                    <span className={`text-4xl font-black ${avgBmsTemp > 45 ? 'text-red-500' : 'text-orange-500'}`}>
+                      {avgBmsTemp.toFixed(1)}
+                    </span>
+                    <span className={`text-xl font-bold ml-1 ${avgBmsTemp > 45 ? 'text-red-500' : 'text-orange-500'}`}>°C</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`rounded-3xl shadow-sm border overflow-hidden transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                <div className={`p-5 border-b flex justify-between items-center ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-100 bg-gray-50'}`}>
+                  <h3 className="text-lg font-bold flex items-center">
+                    <Database className="mr-2 text-orange-500" size={20} /> Células Individuais
+                  </h3>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
+                    Total: {cells.length} Células
+                  </span>
+                </div>
+                
+                <div className="p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {cells.map((cell) => {
+                    const isHighTemp = cell.temperature >= 45;
+                    const isLowVoltage = cell.voltage <= 3.2;
+                    const isHighVoltage = cell.voltage >= 4.15;
+                    
+                    let cellStatusBorder = darkMode ? 'border-gray-700' : 'border-gray-200';
+                    if (isHighTemp || isLowVoltage || isHighVoltage) {
+                       cellStatusBorder = 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]';
+                    }
+
+                    return (
+                      <div key={cell.id} className={`p-4 rounded-2xl border flex flex-col items-center justify-center transition-all ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} ${cellStatusBorder}`}>
+                         <span className="text-xs font-bold text-gray-500 mb-2">CÉLULA {cell.id}</span>
+                         
+                         <div className="flex items-baseline mb-1">
+                           <span className={`text-xl font-bold ${(isLowVoltage || isHighVoltage) ? 'text-red-500' : (darkMode ? 'text-gray-200' : 'text-gray-800')}`}>
+                             {cell.voltage.toFixed(2)}
+                           </span>
+                           <span className="text-xs ml-1 font-medium text-gray-500">V</span>
+                         </div>
+                         
+                         <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 mb-3 overflow-hidden">
+                           <div 
+                             className={`h-1.5 rounded-full ${isLowVoltage ? 'bg-red-500' : isHighVoltage ? 'bg-orange-500' : 'bg-green-500'}`} 
+                             style={{ width: `${Math.max(0, Math.min(100, ((cell.voltage - 3.0) / (4.2 - 3.0)) * 100))}%` }}
+                           ></div>
+                         </div>
+
+                         <div className={`flex items-center text-xs font-bold ${isHighTemp ? 'text-red-500' : 'text-orange-400'}`}>
+                           <Thermometer size={14} className="mr-1" />
+                           {cell.temperature.toFixed(1)}°C
+                         </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              {/* #endregion */}
+            </div>
+
+          ) : activeTab === 'Configurações' ? (
             <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* #region Aba Configurações */}
                <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-orange-500/10 rounded-2xl">
@@ -769,26 +920,26 @@ export default function App() {
                   )}
                 </div>
               </div>
+              {/* #endregion */}
             </div>
+
           ) : activeTab === 'Resumo' ? (
-            
-            // CONTAINER PRINCIPAL: flex flex-col e h-full forçam as coisas a dividirem o espaço disponível
-            <div className="flex flex-col h-full gap-4 md:gap-6 pb-2">
-              
-              {/* GRÁFICOS: Escondidos no Mobile, flex-1 min-h-0 forçam eles a absorverem exatamente o espaço sobrando e encolherem se preciso */}
-              <div className="hidden md:flex gap-4 md:gap-6 flex-1 min-h-0">
-                <div className={`flex-[2] rounded-2xl p-4 md:p-6 shadow-sm border transition-colors duration-300 flex flex-col h-full ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+            <div className="flex flex-col h-full gap-2 md:gap-6 pb-2 min-h-0">
+              {/* #region Aba Resumo */}
+              <div className="flex gap-2 md:gap-6 flex-1 min-h-0 flex-col md:flex-row">
+                
+                <div className={`hidden md:flex flex-[2] rounded-2xl p-4 md:p-6 shadow-sm border transition-colors duration-300 flex-col h-full min-h-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
                   <div className="flex justify-between items-center mb-2">
-                    <h2 className="text-lg font-bold flex items-center">
+                    <h2 className="text-lg font-bold flex items-center shrink-0">
                       <Activity className="mr-2 text-orange-500" size={20} />
                       Desempenho Principal (Tempo Real)
                     </h2>
-                    <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
+                    <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 shrink-0">
                       {mainData[mainData.length - 1].toFixed(1)} <span className="text-sm text-gray-400">kW</span>
                     </span>
                   </div>
                   
-                  <div className="flex-1 w-full relative mt-2 min-h-[100px]">
+                  <div className="flex-1 w-full relative mt-2 min-h-0">
                     <svg viewBox="0 0 1000 200" preserveAspectRatio="none" className="w-full h-full overflow-visible">
                       <defs>
                         <linearGradient id="mainGradient" x1="0" x2="0" y1="0" y2="1">
@@ -807,117 +958,132 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className={`flex-[1] rounded-2xl p-4 md:p-6 shadow-sm border transition-colors duration-300 flex flex-col h-full ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                   <h2 className="text-lg font-bold mb-2">Comparativo de Sensores</h2>
-                   <div className="flex-1 w-full relative min-h-[100px]">
-                      <svg viewBox="0 0 500 200" preserveAspectRatio="none" className="w-full h-full">
-                        {[50, 100, 150].map(y => (
-                          <line key={`grid2-${y}`} x1="0" y1={y} x2="500" y2={y} stroke={darkMode ? '#374151' : '#f3f4f6'} strokeWidth="1" />
-                        ))}
-                        <polyline points={generatePolyline(multiData.series1, 500, 200, 100)} fill="none" stroke="#3b82f6" strokeWidth="3" />
-                        <polyline points={generatePolyline(multiData.series2, 500, 200, 100)} fill="none" stroke="#eab308" strokeWidth="3" />
-                        <polyline points={generatePolyline(multiData.series3, 500, 200, 100)} fill="none" stroke="#ef4444" strokeWidth="3" />
-                        <line x1="0" y1="200" x2="500" y2="200" stroke={darkMode ? '#4b5563' : '#d1d5db'} strokeWidth="2" />
-                        <line x1="0" y1="0" x2="0" y2="200" stroke={darkMode ? '#4b5563' : '#d1d5db'} strokeWidth="2" />
-                      </svg>
+                <div className={`flex-[1] rounded-2xl p-3 md:p-6 shadow-sm border transition-colors duration-300 flex flex-col h-full min-h-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                   <h2 className="text-sm md:text-lg font-bold mb-2 md:mb-4 flex items-center shrink-0">
+                      <BatteryCharging className="mr-1 md:mr-2 text-blue-500" size={18} />
+                      Geral da Bateria (BMS)
+                   </h2>
+                   
+                   <div className="flex-1 flex flex-col justify-center space-y-2 md:space-y-4 min-h-0 overflow-y-auto">
+                     <div className={`flex justify-between items-center p-2 md:p-3 rounded-lg md:rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                        <span className="text-[10px] md:text-xs uppercase font-bold text-gray-500">Tensão Pack</span>
+                        <span className="font-bold text-blue-500 text-sm md:text-lg">{totalBmsVoltage.toFixed(1)} V</span>
+                     </div>
+                     <div className={`flex justify-between items-center p-2 md:p-3 rounded-lg md:rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                        <span className="text-[10px] md:text-xs uppercase font-bold text-gray-500">Célula Máx/Mín</span>
+                        <span className={`font-bold text-sm md:text-lg ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                          {maxVoltageCell.voltage.toFixed(2)}V / {minVoltageCell.voltage.toFixed(2)}V
+                        </span>
+                     </div>
+                     <div className={`flex justify-between items-center p-2 md:p-3 rounded-lg md:rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                        <span className="text-[10px] md:text-xs uppercase font-bold text-gray-500">Desbalanço</span>
+                        <span className={`font-bold text-sm md:text-lg ${voltageImbalance > 0.15 ? 'text-red-500' : 'text-green-500'}`}>
+                          Δ {voltageImbalance.toFixed(3)} V
+                        </span>
+                     </div>
+                     <div className={`flex justify-between items-center p-2 md:p-3 rounded-lg md:rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                        <span className="text-[10px] md:text-xs uppercase font-bold text-gray-500">Status BMS</span>
+                        <span className={`px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs font-black uppercase ${voltageImbalance > 0.15 ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}`}>
+                          {voltageImbalance > 0.15 ? 'Atenção' : 'Normal'}
+                        </span>
+                     </div>
                    </div>
-                   <div className="flex justify-center space-x-4 mt-2 text-xs font-medium">
-                      <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div> Motor</div>
-                      <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div> Bateria</div>
-                      <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div> Placas</div>
-                   </div>
+                   
+                   <button onClick={() => setActiveTab('Baterias')} className="mt-2 md:mt-4 w-full py-1.5 md:py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold rounded-lg transition-colors text-xs md:text-sm shrink-0">
+                      Ver Detalhes <span className="hidden md:inline">das Células</span>
+                   </button>
                 </div>
               </div>
 
-              {/* TABELAS DE MÉTRICAS: shrink-0 força o container a amarrar no rodapé sem deixar nada rolar */}
               <div className={`shrink-0 rounded-2xl shadow-sm overflow-hidden transition-colors duration-300 w-full ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                <div className={`p-3 lg:p-4 border-b ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-gray-50'}`}>
+                <div className={`hidden md:block p-3 lg:p-4 border-b ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-gray-50'}`}>
                   <h2 className="text-lg font-bold">Métricas do Sistema</h2>
                 </div>
                 
-                <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-[1px] w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                <div className={`grid grid-cols-5 gap-[1px] w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
                   
-                  {/* Itens com padding reduzido para garantir que caiba verticalmente em monitores menores */}
-                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Voltagem</span>
+                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Tensão</span>
                     <div className="flex items-baseline">
-                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>48.2</span>
-                      <span className={`text-lg lg:text-xl font-medium ml-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>V</span>
+                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{totalBmsVoltage.toFixed(1)}</span>
+                      <span className={`hidden sm:block text-[10px] sm:text-lg lg:text-xl font-medium ml-0.5 md:ml-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>V</span>
                     </div>
                   </div>
 
-                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Corrente</span>
+                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Corrente</span>
                     <div className="flex items-baseline">
-                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>12.4</span>
-                      <span className={`text-lg lg:text-xl font-medium ml-1 ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>A</span>
+                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>12.4</span>
+                      <span className={`hidden sm:block text-[10px] sm:text-lg lg:text-xl font-medium ml-0.5 md:ml-1 ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>A</span>
                     </div>
                   </div>
 
-                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Rotação</span>
+                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Rotação</span>
                     <div className="flex items-baseline">
-                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{rpm}</span>
+                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{rpm}</span>
                     </div>
                   </div>
 
-                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Temp.</span>
+                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center truncate w-full">Temp. BMS</span>
                     <div className="flex items-baseline">
-                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-red-400' : 'text-red-600'}`}>45</span>
-                      <span className={`text-lg lg:text-xl font-medium ml-1 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>°C</span>
+                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{avgBmsTemp.toFixed(0)}</span>
+                      <span className={`hidden sm:block text-[10px] sm:text-lg lg:text-xl font-medium ml-0.5 md:ml-1 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>°C</span>
                     </div>
                   </div>
 
-                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Bateria</span>
+                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Bateria</span>
                     <div className="flex items-baseline">
-                      <span className={`text-2xl lg:text-3xl font-bold ${battery > 20 ? 'text-green-500' : 'text-red-500'}`}>{battery}%</span>
+                      <span className={`text-xs sm:text-xl lg:text-3xl font-bold ${battery > 20 ? 'text-green-500' : 'text-red-500'}`}>{battery}%</span>
                     </div>
                   </div>
 
-                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Velocidade</span>
+                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center truncate w-full">Velocidade</span>
                     <div className="flex items-baseline">
-                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-teal-400' : 'text-teal-600'}`}>{speed.toFixed(1)}</span>
-                      <span className={`text-xs lg:text-sm font-medium ml-1.5 ${darkMode ? 'text-teal-400/70' : 'text-teal-600/70'}`}>nós</span>
+                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-teal-400' : 'text-teal-600'}`}>{speed}</span>
                     </div>
                   </div>
 
-                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Potência</span>
+                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Potência</span>
                     <div className="flex items-baseline">
-                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>597.6</span>
-                      <span className={`text-lg lg:text-xl font-medium ml-1 ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>W</span>
+                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>597</span>
+                      <span className={`hidden sm:block text-[10px] sm:text-lg lg:text-xl font-medium ml-0.5 md:ml-1 ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>W</span>
                     </div>
                   </div>
 
-                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">Inclinação (β)</span>
+                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center truncate w-full">Inclinação</span>
                     <div className="flex items-baseline">
-                      <span className={`text-2xl lg:text-3xl font-light ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>12°</span>
+                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>12°</span>
                     </div>
                   </div>
 
-                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">S1 Status</span>
+                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">S1 Status</span>
                     <div className="flex items-baseline">
-                      <span className={`text-xl lg:text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>OK</span>
+                      <span className={`text-[9px] sm:text-xl lg:text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>OK</span>
                     </div>
                   </div>
 
-                  <div className={`p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1 lg:mb-2 text-center">S2 Status</span>
+                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">S2 Status</span>
                     <div className="flex items-baseline">
-                      <span className={`text-xl lg:text-2xl font-bold ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>WARN</span>
+                      <span className={`text-[9px] sm:text-xl lg:text-2xl font-bold ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>WARN</span>
                     </div>
                   </div>
 
                 </div>
               </div>
+              {/* #endregion */}
             </div>
+
           ) : activeTab === 'Mapa' ? (
             <div className="max-w-6xl mx-auto h-[80vh] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+               {/* #region Aba Mapa */}
                <div className="flex items-center space-x-3 mb-6 shrink-0">
                   <div className="p-3 bg-emerald-500/10 rounded-2xl">
                     <Map className="text-emerald-500" size={28} />
@@ -928,7 +1094,6 @@ export default function App() {
                   </div>
                </div>
 
-               {/* Container do Mapa */}
                <div className={`flex-1 rounded-3xl overflow-hidden border shadow-sm relative flex items-center justify-center transition-colors duration-300 ${darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-200 border-gray-300'}`}>
                   
                   <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
@@ -940,7 +1105,6 @@ export default function App() {
                     </span>
                   </div>
 
-                  {/* Card flutuante de coordenadas */}
                   <div className={`absolute bottom-6 left-6 p-4 rounded-2xl border shadow-lg backdrop-blur-md ${darkMode ? 'bg-gray-900/80 border-gray-700 text-white' : 'bg-white/80 border-gray-200 text-gray-800'}`}>
                     <p className="text-[10px] uppercase font-bold text-gray-500 mb-2">Coordenadas</p>
                     <div className="flex gap-4 font-mono text-sm">
@@ -954,9 +1118,11 @@ export default function App() {
                   </div>
 
                </div>
+               {/* #endregion */}
             </div>
           ) : activeTab === 'Análise' ? (
             <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+               {/* #region Aba Análise */}
                <div className="flex items-center space-x-3 mb-8">
                   <div className="p-3 bg-blue-500/10 rounded-2xl">
                     <BarChart2 className="text-blue-500" size={28} />
@@ -981,15 +1147,15 @@ export default function App() {
                         </p>
                         
                         <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                           <div className={`px-4 py-2 rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                           <div className={`px-4 py-2 rounded-xl border flex flex-col items-center text-center ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                               <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Consumo</p>
                               <p className="text-xl font-bold text-orange-500">{currentPower.toFixed(1)} kW</p>
                            </div>
-                           <div className={`px-4 py-2 rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                           <div className={`px-4 py-2 rounded-xl border flex flex-col items-center text-center ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                               <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Velocidade</p>
-                              <p className="text-xl font-bold text-blue-500">{speed.toFixed(1)} nós</p>
+                              <p className="text-xl font-bold text-blue-500">{speed}</p>
                            </div>
-                           <div className={`px-4 py-2 rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                           <div className={`px-4 py-2 rounded-xl border flex flex-col items-center text-center ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                               <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Bateria</p>
                               <p className={`text-xl font-bold ${battery > 20 ? 'text-emerald-500' : 'text-red-500'}`}>{battery}%</p>
                            </div>
@@ -1007,6 +1173,7 @@ export default function App() {
                      </div>
                   </div>
                </div>
+               {/* #endregion */}
             </div>
           ) : (
             <div className="flex h-full items-center justify-center text-gray-500">
