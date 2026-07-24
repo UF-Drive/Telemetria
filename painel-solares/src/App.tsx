@@ -139,7 +139,7 @@ export default function App() {
   const [mainData, setMainData] = useState(initialMainData);
   const [multiData, setMultiData] = useState(initialMultiData);
   const [rpm, setRpm] = useState(1450);
-  const [cells, setCells] = useState(generateInitialCells(24));
+  const [cells, setCells] = useState(generateInitialCells(32));
   const [speed, setSpeed] = useState(5); 
   const [battery, setBattery] = useState(100);
   const [currentTime, setCurrentTime] = useState(new Date());
