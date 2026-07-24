@@ -661,7 +661,6 @@ export default function App() {
         </header>
         {/* #endregion */}
 
-        {/* Removido o scroll externo para forçar as páginas a caberem e usarem barra de rolagem apenas internamente onde precisar */}
         <div className="flex-1 overflow-hidden p-2 md:p-6 flex flex-col min-h-0 relative">
 
           {activeTab === 'Baterias' ? (
@@ -927,7 +926,7 @@ export default function App() {
           ) : activeTab === 'Resumo' ? (
             <div className="flex flex-col h-full w-full gap-2 md:gap-4 min-h-0 animate-in fade-in duration-300">
               {/* #region Aba Resumo */}
-              <div className="flex gap-2 md:gap-6 flex-1 min-h-0 flex-col md:flex-row">
+              <div className="flex gap-2 md:gap-6 md:flex-1 min-h-0 flex-col md:flex-row">
                 
                 <div className={`hidden md:flex flex-[2] rounded-2xl p-4 md:p-6 shadow-sm border transition-colors duration-300 flex-col h-full min-h-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
                   <div className="flex justify-between items-center mb-2">
@@ -959,13 +958,13 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className={`flex-1 md:flex-[1] rounded-2xl p-2 md:p-6 shadow-sm border transition-colors duration-300 flex flex-col h-full min-h-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                   <h2 className="text-sm md:text-lg font-bold mb-1.5 md:mb-4 flex items-center shrink-0">
+                <div className={`shrink-0 md:flex-[1] rounded-2xl p-3 md:p-6 shadow-sm border transition-colors duration-300 flex flex-col md:h-full min-h-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                   <h2 className="text-sm md:text-lg font-bold flex items-center shrink-0">
                       <BatteryCharging className="mr-1 md:mr-2 text-blue-500 w-4 h-4 md:w-5 md:h-5" />
                       Geral da Bateria (BMS)
                    </h2>
                    
-                   <div className="flex-1 min-h-0 flex flex-col justify-center">
+                   <div className="my-3 md:flex-1 md:min-h-0 flex flex-col justify-center">
                      <div className="grid grid-cols-2 md:grid-cols-1 gap-1.5 md:gap-4 w-full">
                         <div className={`flex flex-col md:flex-row justify-between items-center p-1.5 md:p-3 rounded-lg md:rounded-xl border text-center md:text-left ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                            <span className="text-[9px] md:text-xs uppercase font-bold text-gray-500 mb-0.5 md:mb-0">Tensão Pack</span>
@@ -992,7 +991,7 @@ export default function App() {
                      </div>
                    </div>
                    
-                   <button onClick={() => setActiveTab('Baterias')} className="mt-2 md:mt-4 w-full py-1.5 md:py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold rounded-lg transition-colors text-xs md:text-sm shrink-0">
+                   <button onClick={() => setActiveTab('Baterias')} className="w-full py-1.5 md:py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold rounded-lg transition-colors text-xs md:text-sm shrink-0">
                       Ver Detalhes <span className="hidden md:inline">das Células</span>
                    </button>
                 </div>
