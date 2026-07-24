@@ -997,84 +997,86 @@ export default function App() {
                 </div>
               </div>
 
-              <div className={`shrink-0 rounded-2xl shadow-sm overflow-hidden transition-colors duration-300 w-full ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                <div className={`hidden md:block p-3 lg:p-4 border-b ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-gray-50'}`}>
+              <div className={`flex-1 md:flex-none md:shrink-0 rounded-2xl shadow-sm overflow-hidden transition-colors duration-300 w-full flex flex-col ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                <div className={`hidden md:block p-3 lg:p-4 border-b shrink-0 ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-gray-50'}`}>
                   <h2 className="text-lg font-bold">Métricas do Sistema</h2>
                 </div>
                 
-                <div className={`grid grid-cols-5 gap-[1px] w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                <div className={`flex-1 grid grid-cols-2 md:grid-cols-5 gap-[1px] w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
                   
-                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Tensão</span>
+                  <div className={`p-2 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Tensão</span>
                     <div className="flex items-baseline">
-                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{totalBmsVoltage.toFixed(1)}</span>
-                      <span className={`hidden sm:block text-[10px] sm:text-lg lg:text-xl font-medium ml-0.5 md:ml-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>V</span>
+                      <span className={`text-xl lg:text-3xl font-light ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{totalBmsVoltage.toFixed(1)}</span>
+                      <span className={`text-xs lg:text-xl font-medium ml-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>V</span>
                     </div>
                   </div>
 
-                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Corrente</span>
+                  <div className={`p-2 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Corrente</span>
                     <div className="flex items-baseline">
-                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>12.4</span>
-                      <span className={`hidden sm:block text-[10px] sm:text-lg lg:text-xl font-medium ml-0.5 md:ml-1 ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>A</span>
+                      <span className={`text-xl lg:text-3xl font-light ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>12.4</span>
+                      <span className={`text-xs lg:text-xl font-medium ml-1 ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>A</span>
                     </div>
                   </div>
 
-                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Rotação</span>
+                  <div className={`p-2 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Rotação</span>
                     <div className="flex items-baseline">
-                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{rpm}</span>
+                      <span className={`text-xl lg:text-3xl font-light ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{rpm}</span>
+                      <span className={`text-xs lg:text-xl font-medium ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>RPM</span>
                     </div>
                   </div>
 
-                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center truncate w-full">Temp. BMS</span>
+                  <div className={`p-2 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center truncate w-full">Temp. BMS</span>
                     <div className="flex items-baseline">
-                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{avgBmsTemp.toFixed(0)}</span>
-                      <span className={`hidden sm:block text-[10px] sm:text-lg lg:text-xl font-medium ml-0.5 md:ml-1 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>°C</span>
+                      <span className={`text-xl lg:text-3xl font-light ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{avgBmsTemp.toFixed(0)}</span>
+                      <span className={`text-xs lg:text-xl font-medium ml-1 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>°C</span>
                     </div>
                   </div>
 
-                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Bateria</span>
+                  <div className={`p-2 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Bateria</span>
                     <div className="flex items-baseline">
-                      <span className={`text-xs sm:text-xl lg:text-3xl font-bold ${battery > 20 ? 'text-green-500' : 'text-red-500'}`}>{battery}%</span>
+                      <span className={`text-xl lg:text-3xl font-bold ${battery > 20 ? 'text-green-500' : 'text-red-500'}`}>{battery}%</span>
                     </div>
                   </div>
 
-                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center truncate w-full">Velocidade</span>
+                  <div className={`p-2 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center truncate w-full">Velocidade</span>
                     <div className="flex items-baseline">
-                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-teal-400' : 'text-teal-600'}`}>{speed}</span>
+                      <span className={`text-xl lg:text-3xl font-light ${darkMode ? 'text-teal-400' : 'text-teal-600'}`}>{speed}</span>
+                      <span className={`text-xs lg:text-xl font-medium ml-1 ${darkMode ? 'text-teal-400' : 'text-teal-600'}`}>km/h</span>
                     </div>
                   </div>
 
-                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Potência</span>
+                  <div className={`p-2 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">Potência</span>
                     <div className="flex items-baseline">
-                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>597</span>
-                      <span className={`hidden sm:block text-[10px] sm:text-lg lg:text-xl font-medium ml-0.5 md:ml-1 ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>W</span>
+                      <span className={`text-xl lg:text-3xl font-light ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>597</span>
+                      <span className={`text-xs lg:text-xl font-medium ml-1 ${darkMode ? 'text-yellow-300' : 'text-yellow-500'}`}>W</span>
                     </div>
                   </div>
 
-                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center truncate w-full">Inclinação</span>
+                  <div className={`p-2 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center truncate w-full">Inclinação</span>
                     <div className="flex items-baseline">
-                      <span className={`text-xs sm:text-xl lg:text-3xl font-light ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>12°</span>
+                      <span className={`text-xl lg:text-3xl font-light ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>12°</span>
                     </div>
                   </div>
 
-                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">S1 Status</span>
+                  <div className={`p-2 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">S1 Status</span>
                     <div className="flex items-baseline">
-                      <span className={`text-[9px] sm:text-xl lg:text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>OK</span>
+                      <span className={`text-base lg:text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>OK</span>
                     </div>
                   </div>
 
-                  <div className={`p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                    <span className="text-[7px] sm:text-[9px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">S2 Status</span>
+                  <div className={`p-2 lg:p-4 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <span className="text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-gray-500 mb-0.5 text-center">S2 Status</span>
                     <div className="flex items-baseline">
-                      <span className={`text-[9px] sm:text-xl lg:text-2xl font-bold ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>WARN</span>
+                      <span className={`text-base lg:text-2xl font-bold ${darkMode ? 'text-rose-400' : 'text-rose-600'}`}>WARN</span>
                     </div>
                   </div>
 
