@@ -390,7 +390,7 @@ export default function App() {
   // #region Renderização: Modo Piloto
   if (pilotMode) {
     return (
-      <div className={`h-screen w-full flex flex-col p-4 md:p-6 font-sans select-none overflow-hidden relative transition-colors duration-300 ${darkMode ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'}`}>
+      <div className={`h-[100dvh] w-full flex flex-col p-4 md:p-6 font-sans select-none overflow-hidden relative transition-colors duration-300 ${darkMode ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'}`}>
         <div className="flex justify-between items-center mb-4 md:mb-6 shrink-0">
           
           <div className="flex items-center space-x-2 md:space-x-4">
@@ -519,7 +519,7 @@ export default function App() {
 
   // #region Renderização: Dashboard Engenharia
   return (
-    <div className={`flex h-screen w-full transition-colors duration-300 font-sans overflow-hidden ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>
+    <div className={`flex h-[100dvh] w-full transition-colors duration-300 font-sans overflow-hidden ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>
       
       {sidebarOpen && (
         <div 
@@ -588,7 +588,7 @@ export default function App() {
       </aside>
       {/* #endregion */}
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+      <main className="flex-1 flex flex-col h-[100dvh] overflow-hidden min-w-0">
       
         {/* #region Cabeçalho (Header) */}
         <header className={`h-16 flex items-center justify-between px-4 md:px-8 border-b transition-colors duration-300 shrink-0 ${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white/50 border-gray-200'} backdrop-blur-md`}>
@@ -661,64 +661,65 @@ export default function App() {
         </header>
         {/* #endregion */}
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        {/* Removido o scroll externo para forçar as páginas a caberem e usarem barra de rolagem apenas internamente onde precisar */}
+        <div className="flex-1 overflow-hidden p-2 md:p-6 flex flex-col min-h-0 relative">
 
           {activeTab === 'Baterias' ? (
-            <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="h-full w-full max-w-6xl mx-auto flex flex-col animate-in fade-in duration-300 min-h-0">
               {/* #region Aba Baterias */}
-              <div className="flex items-center space-x-3 mb-8">
-                <div className="p-3 bg-orange-500/10 rounded-2xl">
-                  <BatteryCharging className="text-orange-500" size={28} />
+              <div className="flex items-center space-x-3 mb-2 md:mb-6 shrink-0">
+                <div className="p-2 md:p-3 bg-orange-500/10 rounded-xl md:rounded-2xl">
+                  <BatteryCharging className="text-orange-500 w-5 h-5 md:w-7 md:h-7" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">Diagnóstico do BMS</h2>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Monitoramento individual de células e status geral do pack de bateria.
+                  <h2 className="text-lg md:text-2xl font-bold">Diagnóstico do BMS</h2>
+                  <p className={`text-[10px] md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Monitoramento individual de células e pack.
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className={`rounded-3xl p-6 shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                  <h3 className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">Tensão Total (Pack)</h3>
+              <div className="grid grid-cols-3 gap-2 md:gap-6 mb-2 md:mb-6 shrink-0">
+                <div className={`rounded-xl md:rounded-3xl p-2 md:p-6 shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                  <h3 className="text-gray-500 font-bold text-[7px] sm:text-xs uppercase tracking-wider mb-1 md:mb-2 truncate">Tensão Total</h3>
                   <div className="flex items-baseline">
-                    <span className="text-4xl font-black text-blue-500">{totalBmsVoltage.toFixed(1)}</span>
-                    <span className="text-xl font-bold ml-1 text-blue-500">V</span>
+                    <span className="text-sm sm:text-4xl font-black text-blue-500">{totalBmsVoltage.toFixed(1)}</span>
+                    <span className="text-[10px] sm:text-xl font-bold ml-0.5 md:ml-1 text-blue-500">V</span>
                   </div>
                 </div>
 
-                <div className={`rounded-3xl p-6 shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                  <h3 className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">Desbalanceamento (ΔV)</h3>
+                <div className={`rounded-xl md:rounded-3xl p-2 md:p-6 shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                  <h3 className="text-gray-500 font-bold text-[7px] sm:text-xs uppercase tracking-wider mb-1 md:mb-2 truncate">Desbalanço</h3>
                   <div className="flex items-baseline">
-                    <span className={`text-4xl font-black ${voltageImbalance > 0.15 ? 'text-red-500' : 'text-green-500'}`}>
+                    <span className={`text-sm sm:text-4xl font-black ${voltageImbalance > 0.15 ? 'text-red-500' : 'text-green-500'}`}>
                       {voltageImbalance.toFixed(3)}
                     </span>
-                    <span className={`text-xl font-bold ml-1 ${voltageImbalance > 0.15 ? 'text-red-500' : 'text-green-500'}`}>V</span>
+                    <span className={`text-[10px] sm:text-xl font-bold ml-0.5 md:ml-1 ${voltageImbalance > 0.15 ? 'text-red-500' : 'text-green-500'}`}>V</span>
                   </div>
                 </div>
 
-                <div className={`rounded-3xl p-6 shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                  <h3 className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-2">Temperatura Média</h3>
+                <div className={`rounded-xl md:rounded-3xl p-2 md:p-6 shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                  <h3 className="text-gray-500 font-bold text-[7px] sm:text-xs uppercase tracking-wider mb-1 md:mb-2 truncate">Temp. Média</h3>
                   <div className="flex items-baseline">
-                    <span className={`text-4xl font-black ${avgBmsTemp > 45 ? 'text-red-500' : 'text-orange-500'}`}>
+                    <span className={`text-sm sm:text-4xl font-black ${avgBmsTemp > 45 ? 'text-red-500' : 'text-orange-500'}`}>
                       {avgBmsTemp.toFixed(1)}
                     </span>
-                    <span className={`text-xl font-bold ml-1 ${avgBmsTemp > 45 ? 'text-red-500' : 'text-orange-500'}`}>°C</span>
+                    <span className={`text-[10px] sm:text-xl font-bold ml-0.5 md:ml-1 ${avgBmsTemp > 45 ? 'text-red-500' : 'text-orange-500'}`}>°C</span>
                   </div>
                 </div>
               </div>
 
-              <div className={`rounded-3xl shadow-sm border overflow-hidden transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                <div className={`p-5 border-b flex justify-between items-center ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-100 bg-gray-50'}`}>
-                  <h3 className="text-lg font-bold flex items-center">
-                    <Database className="mr-2 text-orange-500" size={20} /> Células Individuais
+              <div className={`flex-1 rounded-2xl md:rounded-3xl shadow-sm border overflow-hidden flex flex-col min-h-0 transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                <div className={`p-2 md:p-5 border-b flex justify-between items-center shrink-0 ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-100 bg-gray-50'}`}>
+                  <h3 className="text-xs md:text-lg font-bold flex items-center">
+                    <Database className="mr-1 md:mr-2 text-orange-500 w-3 h-3 md:w-5 md:h-5" /> Células Individuais
                   </h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
-                    Total: {cells.length} Células
+                  <span className={`px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-xs font-bold ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
+                    Total: {cells.length}
                   </span>
                 </div>
                 
-                <div className="p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="flex-1 p-2 md:p-6 overflow-y-auto grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-1.5 md:gap-4 content-start">
                   {cells.map((cell) => {
                     const isHighTemp = cell.temperature >= 45;
                     const isLowVoltage = cell.voltage <= 3.2;
@@ -730,25 +731,25 @@ export default function App() {
                     }
 
                     return (
-                      <div key={cell.id} className={`p-4 rounded-2xl border flex flex-col items-center justify-center transition-all ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} ${cellStatusBorder}`}>
-                         <span className="text-xs font-bold text-gray-500 mb-2">CÉLULA {cell.id}</span>
+                      <div key={cell.id} className={`p-1.5 md:p-4 rounded-xl md:rounded-2xl border flex flex-col items-center justify-center transition-all ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} ${cellStatusBorder}`}>
+                         <span className="text-[7px] md:text-xs font-bold text-gray-500 mb-1 md:mb-2">CÉLULA {cell.id}</span>
                          
                          <div className="flex items-baseline mb-1">
-                           <span className={`text-xl font-bold ${(isLowVoltage || isHighVoltage) ? 'text-red-500' : (darkMode ? 'text-gray-200' : 'text-gray-800')}`}>
+                           <span className={`text-xs md:text-xl font-bold ${(isLowVoltage || isHighVoltage) ? 'text-red-500' : (darkMode ? 'text-gray-200' : 'text-gray-800')}`}>
                              {cell.voltage.toFixed(2)}
                            </span>
-                           <span className="text-xs ml-1 font-medium text-gray-500">V</span>
+                           <span className="text-[8px] md:text-xs ml-0.5 md:ml-1 font-medium text-gray-500">V</span>
                          </div>
                          
-                         <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 mb-3 overflow-hidden">
+                         <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1 md:h-1.5 mb-1.5 md:mb-3 overflow-hidden">
                            <div 
-                             className={`h-1.5 rounded-full ${isLowVoltage ? 'bg-red-500' : isHighVoltage ? 'bg-orange-500' : 'bg-green-500'}`} 
+                             className={`h-1 md:h-1.5 rounded-full ${isLowVoltage ? 'bg-red-500' : isHighVoltage ? 'bg-orange-500' : 'bg-green-500'}`} 
                              style={{ width: `${Math.max(0, Math.min(100, ((cell.voltage - 3.0) / (4.2 - 3.0)) * 100))}%` }}
                            ></div>
                          </div>
 
-                         <div className={`flex items-center text-xs font-bold ${isHighTemp ? 'text-red-500' : 'text-orange-400'}`}>
-                           <Thermometer size={14} className="mr-1" />
+                         <div className={`flex items-center text-[8px] md:text-xs font-bold ${isHighTemp ? 'text-red-500' : 'text-orange-400'}`}>
+                           <Thermometer className="w-2 h-2 md:w-3.5 md:h-3.5 mr-0.5 md:mr-1" />
                            {cell.temperature.toFixed(1)}°C
                          </div>
                       </div>
@@ -760,16 +761,16 @@ export default function App() {
             </div>
 
           ) : activeTab === 'Configurações' ? (
-            <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="h-full w-full max-w-5xl mx-auto flex flex-col animate-in fade-in duration-300 min-h-0">
               {/* #region Aba Configurações */}
-               <div className="flex items-center justify-between mb-8">
+               <div className="flex items-center justify-between mb-4 shrink-0">
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-orange-500/10 rounded-2xl">
                     <Settings className="text-orange-500" size={28} />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold">Gerenciamento de Equipe</h2>
-                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <p className={`text-[10px] md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       {currentUser.isModerador ? 'Você tem acesso total para gerenciar membros.' : 'Visualização da equipe (Apenas Moderadores podem editar).'}
                     </p>
                   </div>
@@ -782,29 +783,29 @@ export default function App() {
               </div>
 
               {currentUser.isModerador && (
-                <div className={`rounded-3xl p-6 shadow-sm border mb-8 transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                  <h3 className="text-lg font-bold mb-4 flex items-center">
+                <div className={`shrink-0 rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-sm border mb-4 transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                  <h3 className="text-sm md:text-lg font-bold mb-3 md:mb-4 flex items-center">
                     <Plus className="mr-2 text-green-500" size={20} /> Adicionar Novo Membro
                   </h3>
-                  <form onSubmit={handleAddMember} className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <form onSubmit={handleAddMember} className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
                     <input 
                       type="email" placeholder="E-mail (Gera o nome automático)" required
                       value={newMemberEmail} onChange={e => setNewMemberEmail(e.target.value)}
-                      className={`md:col-span-5 px-4 py-3 rounded-xl border focus:ring-2 focus:ring-orange-500 outline-none transition-colors ${darkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300'}`}
+                      className={`md:col-span-5 px-3 py-2 md:px-4 md:py-3 rounded-lg md:rounded-xl border focus:ring-2 focus:ring-orange-500 outline-none transition-colors text-sm ${darkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300'}`}
                     />
                     <div className="relative md:col-span-3">
                       <select
                         value={newMemberRole} onChange={e => setNewMemberRole(e.target.value)}
-                        className={`w-full appearance-none px-4 py-3 pr-10 rounded-xl border focus:ring-2 focus:ring-orange-500 outline-none transition-colors ${darkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300'}`}
+                        className={`w-full text-sm appearance-none px-3 py-2 md:px-4 md:py-3 pr-10 rounded-lg md:rounded-xl border focus:ring-2 focus:ring-orange-500 outline-none transition-colors ${darkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300'}`}
                       >
                         <option value="">Sem Função Especial</option>
                         <option value="Piloto">Piloto</option>
                         <option value="Engenheiro de Prova">Engenheiro de Prova</option>
                       </select>
-                      <ChevronDown size={18} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                      <ChevronDown size={18} className={`absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                     </div>
                     
-                    <label className={`md:col-span-2 flex items-center justify-center space-x-2 px-4 py-3 rounded-xl border cursor-pointer select-none transition-colors ${darkMode ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-gray-50 border-gray-300 hover:bg-gray-100'}`}>
+                    <label className={`md:col-span-2 flex items-center justify-center space-x-2 px-3 py-2 md:px-4 md:py-3 rounded-lg md:rounded-xl border cursor-pointer select-none transition-colors ${darkMode ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800' : 'bg-gray-50 border-gray-300 hover:bg-gray-100'}`}>
                       <input 
                         type="checkbox" 
                         checked={newMemberIsMod} 
@@ -814,44 +815,44 @@ export default function App() {
                       <span className="font-semibold text-sm">Moderador</span>
                     </label>
 
-                    <button type="submit" className="md:col-span-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-[1.02] active:scale-95 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-green-500/30 flex items-center justify-center">
+                    <button type="submit" className="md:col-span-2 text-sm bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-[1.02] active:scale-95 text-white font-bold py-2 md:py-3 px-4 rounded-lg md:rounded-xl transition-all shadow-lg shadow-green-500/30 flex items-center justify-center">
                       Cadastrar
                     </button>
                   </form>
                 </div>
               )}
 
-              <div className={`rounded-3xl shadow-sm border overflow-hidden transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                <div className={`p-5 border-b flex justify-between items-center ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-100 bg-gray-50'}`}>
-                  <h3 className="text-lg font-bold flex items-center">
+              <div className={`flex-1 flex flex-col min-h-0 rounded-2xl md:rounded-3xl shadow-sm border overflow-hidden transition-colors duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                <div className={`p-3 md:p-5 border-b shrink-0 flex justify-between items-center ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-100 bg-gray-50'}`}>
+                  <h3 className="text-sm md:text-lg font-bold flex items-center">
                     <User className="mr-2 text-blue-500" size={20} /> Membros Cadastrados
                   </h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
+                  <span className={`px-3 py-1 rounded-full text-[10px] md:text-xs font-bold ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
                     Total: {members.length}
                   </span>
                 </div>
-                <div className="divide-y transition-colors duration-300 overflow-x-auto">
-                  <div className="min-w-[600px]">
+                <div className="flex-1 overflow-y-auto divide-y transition-colors duration-300">
+                  <div className="min-w-[600px] md:min-w-0">
                     {members.map(member => (
-                      <div key={member.id} className={`flex items-center justify-between p-5 transition-colors ${darkMode ? 'border-gray-700 hover:bg-gray-700/50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                      <div key={member.id} className={`flex items-center justify-between p-4 md:p-5 transition-colors ${darkMode ? 'border-gray-700 hover:bg-gray-700/50' : 'border-gray-200 hover:bg-gray-50'}`}>
                         
-                        <div className="flex items-center space-x-4 w-1/2">
+                        <div className="flex items-center space-x-3 md:space-x-4 w-1/2">
                           <img 
                             src={member.photo} 
                             alt={member.name} 
-                            className={`w-12 h-12 flex-shrink-0 rounded-full object-cover ${member.isModerador ? 'border-[3px] border-orange-500' : (darkMode ? 'border-2 border-gray-600' : 'border-2 border-gray-300')}`} 
+                            className={`w-10 h-10 md:w-12 md:h-12 flex-shrink-0 rounded-full object-cover ${member.isModerador ? 'border-[3px] border-orange-500' : (darkMode ? 'border-2 border-gray-600' : 'border-2 border-gray-300')}`} 
                           />
                           <div className="flex flex-col">
-                            <p className="font-bold text-md flex items-center">
+                            <p className="font-bold text-sm md:text-md flex items-center">
                               {member.name}
                               {member.isOnline && (
                                 <span className="ml-2 w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]" title="Online agora"></span>
                               )}
-                              {member.isModerador && <Shield size={14} className="ml-2 text-orange-500"/>}
+                              {member.isModerador && <Shield size={12} className="ml-2 text-orange-500"/>}
                             </p>
-                            <div className={`flex flex-col text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            <div className={`flex flex-col text-xs md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                               <span>{member.email}</span>
-                              <span className="text-[11px] font-medium opacity-80 mt-0.5">
+                              <span className="text-[10px] md:text-[11px] font-medium opacity-80 mt-0.5">
                                 {member.isOnline ? (
                                   <span className="text-green-600 dark:text-green-400">Ativo agora</span>
                                 ) : (
@@ -862,50 +863,50 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="flex items-center space-x-6">
+                        <div className="flex items-center space-x-4 md:space-x-6">
                           {currentUser.isModerador ? (
                             <>
                               <div className="relative">
                                 <select 
                                   value={member.mainRole}
                                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleUpdateMemberRole(member.id, 'mainRole', e.target.value)}
-                                  className={`appearance-none text-sm px-3 py-1.5 pr-8 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${darkMode ? 'bg-gray-900 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-300'}`}
+                                  className={`appearance-none text-[10px] md:text-sm px-2 md:px-3 py-1 md:py-1.5 pr-6 md:pr-8 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${darkMode ? 'bg-gray-900 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-300'}`}
                                 >
                                   <option value="">Sem Função Especial</option>
                                   <option value="Piloto">Piloto</option>
                                   <option value="Engenheiro de Prova">Engenheiro de Prova</option>
                                 </select>
-                                <ChevronDown size={14} className={`absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                                <ChevronDown size={14} className={`absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                               </div>
                               
-                              <label className="flex items-center space-x-2 cursor-pointer">
+                              <label className="flex items-center space-x-1.5 md:space-x-2 cursor-pointer">
                                 <input 
                                   type="checkbox" 
                                   checked={member.isModerador}
                                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleUpdateMemberRole(member.id, 'isModerador', e.target.checked)}
-                                  className="w-4 h-4 text-orange-500 rounded focus:ring-orange-500"
+                                  className="w-3.5 h-3.5 md:w-4 md:h-4 text-orange-500 rounded focus:ring-orange-500"
                                 />
-                                <span className={`text-sm font-semibold ${member.isModerador ? 'text-orange-500' : (darkMode ? 'text-gray-400' : 'text-gray-600')}`}>Mod</span>
+                                <span className={`text-[10px] md:text-sm font-semibold ${member.isModerador ? 'text-orange-500' : (darkMode ? 'text-gray-400' : 'text-gray-600')}`}>Mod</span>
                               </label>
 
                               <button 
                                 onClick={() => handleRemoveMember(member.id)}
                                 disabled={member.email === currentUser.email}
-                                className="p-2 text-red-500 hover:bg-red-500/10 hover:text-red-600 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                className="p-1.5 md:p-2 text-red-500 hover:bg-red-500/10 hover:text-red-600 rounded-lg md:rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                                 title={member.email === currentUser.email ? "Você não pode remover a si mesmo" : "Remover Membro"}
                               >
-                                <Trash2 size={20} />
+                                <Trash2 size={18} />
                               </button>
                             </>
                           ) : (
-                            <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-2 md:space-x-3">
                               {member.mainRole && (
-                                <span className={`px-4 py-1.5 text-xs font-bold rounded-full ${darkMode ? 'bg-blue-900/40 text-blue-400 border border-blue-800' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
+                                <span className={`px-3 py-1 md:px-4 md:py-1.5 text-[10px] md:text-xs font-bold rounded-full ${darkMode ? 'bg-blue-900/40 text-blue-400 border border-blue-800' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
                                   {member.mainRole}
                                 </span>
                               )}
                               {member.isModerador && (
-                                <span className={`px-4 py-1.5 text-xs font-bold rounded-full ${darkMode ? 'bg-orange-900/40 text-orange-400 border border-orange-800' : 'bg-orange-100 text-orange-700 border border-orange-200'}`}>
+                                <span className={`px-3 py-1 md:px-4 md:py-1.5 text-[10px] md:text-xs font-bold rounded-full ${darkMode ? 'bg-orange-900/40 text-orange-400 border border-orange-800' : 'bg-orange-100 text-orange-700 border border-orange-200'}`}>
                                   Moderador
                                 </span>
                               )}
@@ -924,7 +925,7 @@ export default function App() {
             </div>
 
           ) : activeTab === 'Resumo' ? (
-            <div className="flex flex-col h-full gap-2 md:gap-6 pb-2 min-h-0">
+            <div className="flex flex-col h-full w-full gap-2 md:gap-4 min-h-0 animate-in fade-in duration-300">
               {/* #region Aba Resumo */}
               <div className="flex gap-2 md:gap-6 flex-1 min-h-0 flex-col md:flex-row">
                 
@@ -958,34 +959,36 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className={`flex-[1] rounded-2xl p-3 md:p-6 shadow-sm border transition-colors duration-300 flex flex-col h-full min-h-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
-                   <h2 className="text-sm md:text-lg font-bold mb-2 md:mb-4 flex items-center shrink-0">
-                      <BatteryCharging className="mr-1 md:mr-2 text-blue-500" size={18} />
+                <div className={`flex-1 md:flex-[1] rounded-2xl p-2 md:p-6 shadow-sm border transition-colors duration-300 flex flex-col h-full min-h-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+                   <h2 className="text-sm md:text-lg font-bold mb-1.5 md:mb-4 flex items-center shrink-0">
+                      <BatteryCharging className="mr-1 md:mr-2 text-blue-500 w-4 h-4 md:w-5 md:h-5" />
                       Geral da Bateria (BMS)
                    </h2>
                    
-                   <div className="flex-1 flex flex-col justify-center space-y-2 md:space-y-4 min-h-0 overflow-y-auto">
-                     <div className={`flex justify-between items-center p-2 md:p-3 rounded-lg md:rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-                        <span className="text-[10px] md:text-xs uppercase font-bold text-gray-500">Tensão Pack</span>
-                        <span className="font-bold text-blue-500 text-sm md:text-lg">{totalBmsVoltage.toFixed(1)} V</span>
-                     </div>
-                     <div className={`flex justify-between items-center p-2 md:p-3 rounded-lg md:rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-                        <span className="text-[10px] md:text-xs uppercase font-bold text-gray-500">Célula Máx/Mín</span>
-                        <span className={`font-bold text-sm md:text-lg ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-                          {maxVoltageCell.voltage.toFixed(2)}V / {minVoltageCell.voltage.toFixed(2)}V
-                        </span>
-                     </div>
-                     <div className={`flex justify-between items-center p-2 md:p-3 rounded-lg md:rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-                        <span className="text-[10px] md:text-xs uppercase font-bold text-gray-500">Desbalanço</span>
-                        <span className={`font-bold text-sm md:text-lg ${voltageImbalance > 0.15 ? 'text-red-500' : 'text-green-500'}`}>
-                          Δ {voltageImbalance.toFixed(3)} V
-                        </span>
-                     </div>
-                     <div className={`flex justify-between items-center p-2 md:p-3 rounded-lg md:rounded-xl border ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-                        <span className="text-[10px] md:text-xs uppercase font-bold text-gray-500">Status BMS</span>
-                        <span className={`px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs font-black uppercase ${voltageImbalance > 0.15 ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}`}>
-                          {voltageImbalance > 0.15 ? 'Atenção' : 'Normal'}
-                        </span>
+                   <div className="flex-1 min-h-0 flex flex-col justify-center">
+                     <div className="grid grid-cols-2 md:grid-cols-1 gap-1.5 md:gap-4 w-full">
+                        <div className={`flex flex-col md:flex-row justify-between items-center p-1.5 md:p-3 rounded-lg md:rounded-xl border text-center md:text-left ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                           <span className="text-[9px] md:text-xs uppercase font-bold text-gray-500 mb-0.5 md:mb-0">Tensão Pack</span>
+                           <span className="font-bold text-blue-500 text-xs md:text-lg">{totalBmsVoltage.toFixed(1)} V</span>
+                        </div>
+                        <div className={`flex flex-col md:flex-row justify-between items-center p-1.5 md:p-3 rounded-lg md:rounded-xl border text-center md:text-left ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                           <span className="text-[9px] md:text-xs uppercase font-bold text-gray-500 mb-0.5 md:mb-0">Célula Máx/Mín</span>
+                           <span className={`font-bold text-[10px] md:text-lg ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                             {maxVoltageCell.voltage.toFixed(2)}V / {minVoltageCell.voltage.toFixed(2)}V
+                           </span>
+                        </div>
+                        <div className={`flex flex-col md:flex-row justify-between items-center p-1.5 md:p-3 rounded-lg md:rounded-xl border text-center md:text-left ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                           <span className="text-[9px] md:text-xs uppercase font-bold text-gray-500 mb-0.5 md:mb-0">Desbalanço</span>
+                           <span className={`font-bold text-xs md:text-lg ${voltageImbalance > 0.15 ? 'text-red-500' : 'text-green-500'}`}>
+                             Δ {voltageImbalance.toFixed(3)} V
+                           </span>
+                        </div>
+                        <div className={`flex flex-col md:flex-row justify-between items-center p-1.5 md:p-3 rounded-lg md:rounded-xl border text-center md:text-left ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                           <span className="text-[9px] md:text-xs uppercase font-bold text-gray-500 mb-0.5 md:mb-0">Status BMS</span>
+                           <span className={`px-2 py-0.5 md:py-1 rounded text-[9px] md:text-xs font-black uppercase ${voltageImbalance > 0.15 ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}`}>
+                             {voltageImbalance > 0.15 ? 'Atenção' : 'Normal'}
+                           </span>
+                        </div>
                      </div>
                    </div>
                    
@@ -1082,19 +1085,19 @@ export default function App() {
             </div>
 
           ) : activeTab === 'Mapa' ? (
-            <div className="max-w-6xl mx-auto h-[80vh] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="h-full w-full max-w-6xl mx-auto flex flex-col animate-in fade-in duration-300 min-h-0">
                {/* #region Aba Mapa */}
-               <div className="flex items-center space-x-3 mb-6 shrink-0">
+               <div className="flex items-center space-x-3 mb-4 shrink-0">
                   <div className="p-3 bg-emerald-500/10 rounded-2xl">
                     <Map className="text-emerald-500" size={28} />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold">Rastreamento GPS</h2>
-                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Posicionamento do barco em tempo real</p>
+                    <p className={`text-[10px] md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Posicionamento do barco em tempo real</p>
                   </div>
                </div>
 
-               <div className={`flex-1 rounded-3xl overflow-hidden border shadow-sm relative flex items-center justify-center transition-colors duration-300 ${darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-200 border-gray-300'}`}>
+               <div className={`flex-1 rounded-2xl md:rounded-3xl overflow-hidden border shadow-sm relative flex items-center justify-center transition-colors duration-300 min-h-0 ${darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-200 border-gray-300'}`}>
                   
                   <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                   
@@ -1105,9 +1108,9 @@ export default function App() {
                     </span>
                   </div>
 
-                  <div className={`absolute bottom-6 left-6 p-4 rounded-2xl border shadow-lg backdrop-blur-md ${darkMode ? 'bg-gray-900/80 border-gray-700 text-white' : 'bg-white/80 border-gray-200 text-gray-800'}`}>
-                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-2">Coordenadas</p>
-                    <div className="flex gap-4 font-mono text-sm">
+                  <div className={`absolute bottom-4 left-4 md:bottom-6 md:left-6 p-3 md:p-4 rounded-xl md:rounded-2xl border shadow-lg backdrop-blur-md ${darkMode ? 'bg-gray-900/80 border-gray-700 text-white' : 'bg-white/80 border-gray-200 text-gray-800'}`}>
+                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1 md:mb-2">Coordenadas</p>
+                    <div className="flex gap-3 md:gap-4 font-mono text-xs md:text-sm">
                       <div>
                         <span className="text-orange-500 mr-1">LAT</span> -20.2976
                       </div>
@@ -1121,23 +1124,23 @@ export default function App() {
                {/* #endregion */}
             </div>
           ) : activeTab === 'Análise' ? (
-            <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="h-full w-full max-w-5xl mx-auto flex flex-col animate-in fade-in duration-300 min-h-0">
                {/* #region Aba Análise */}
-               <div className="flex items-center space-x-3 mb-8">
+               <div className="flex items-center space-x-3 mb-4 shrink-0">
                   <div className="p-3 bg-blue-500/10 rounded-2xl">
                     <BarChart2 className="text-blue-500" size={28} />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold">Análise de Desempenho</h2>
-                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Previsões e métricas avançadas baseadas em telemetria</p>
+                    <p className={`text-[10px] md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Previsões e métricas avançadas baseadas em telemetria</p>
                   </div>
                </div>
 
-               <div className={`rounded-3xl p-8 shadow-sm border mb-8 transition-colors duration-300 relative overflow-hidden ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
+               <div className={`flex-1 rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-sm border mb-4 transition-colors duration-300 relative overflow-y-auto ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
                   <div className="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
                   
-                  <div className="flex flex-col md:flex-row items-center justify-between relative z-10">
-                     <div className="flex-1 mb-6 md:mb-0 md:pr-4 flex flex-col items-center md:items-start text-center md:text-left w-full">
+                  <div className="flex flex-col md:flex-row items-center justify-between relative z-10 h-full">
+                     <div className="flex-1 mb-6 md:mb-0 md:pr-4 flex flex-col items-center md:items-start text-center md:text-left w-full justify-center">
                         <h3 className="text-lg font-bold mb-2 flex items-center justify-center md:justify-start">
                           <Zap className="mr-2 text-blue-500" size={20} /> 
                           Tempo de Bateria Remanescente
