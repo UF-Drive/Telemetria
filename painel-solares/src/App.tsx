@@ -160,19 +160,27 @@ export default function App() {
 
   // #region Efeitos
   useEffect(() => {
-    // Busca a tag no index.html
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
 
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      // Injeta a cor de fundo do modo escuro (#111827) (para que no celular a barra de status fique escura)
-      if (metaThemeColor) metaThemeColor.setAttribute('content', '#111827');
-    } else {
-      document.documentElement.classList.remove('dark');
-      // Injeta a cor de fundo do modo claro (#f3f4f6) (para que no celular a barra de status fique clara)
-      if (metaThemeColor) metaThemeColor.setAttribute('content', '#f3f4f6');
-    }
-  }, [darkMode]);
+      // REGRA 1: Se estiver na tela de Login (sem currentUser), 
+      // a interface é escura por padrão.
+      if (!currentUser) {
+        if (metaThemeColor) metaThemeColor.setAttribute('content', '#111827');
+        return; // Interrompe o código aqui até a pessoa logar.
+      }
+
+      // REGRA 2: Se já estiver logado, obedece o botão do modo claro/escuro.
+      if (darkMode) {
+        document.documentElement.classList.add('dark');
+        if (metaThemeColor) metaThemeColor.setAttribute('content', '#111827');
+      } else {
+        document.documentElement.classList.remove('dark');
+        if (metaThemeColor) metaThemeColor.setAttribute('content', '#f3f4f6');
+      }
+      
+    // Adicionamos o currentUser aqui para o React saber 
+    // que precisa rodar isso de novo no momento do login
+  }, [darkMode, currentUser]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
