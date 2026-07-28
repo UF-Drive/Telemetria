@@ -1,8 +1,8 @@
 {
   "name": "Telemetria Solares",
-  "short_name": "Solares",
+  "short_name": "Telemetria",
   "start_url": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#111827",
   "theme_color": "#f97316",
   "icons": [
