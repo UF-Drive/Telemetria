@@ -160,10 +160,17 @@ export default function App() {
 
   // #region Efeitos
   useEffect(() => {
+    // Busca a tag no index.html
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+
     if (darkMode) {
       document.documentElement.classList.add('dark');
+      // Injeta a cor de fundo do modo escuro (#111827) (para que no celular a barra de status fique escura)
+      if (metaThemeColor) metaThemeColor.setAttribute('content', '#111827');
     } else {
       document.documentElement.classList.remove('dark');
+      // Injeta a cor de fundo do modo claro (#f3f4f6) (para que no celular a barra de status fique clara)
+      if (metaThemeColor) metaThemeColor.setAttribute('content', '#f3f4f6');
     }
   }, [darkMode]);
 
@@ -529,6 +536,7 @@ export default function App() {
                     <div className="flex items-baseline -translate-y-[2px] md:-translate-y-[4px]">
                        <span className="text-5xl md:text-7xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,1)] tracking-tighter leading-none">
                           {battery}
+                          
                        </span>
                        <span className="text-2xl md:text-4xl font-bold text-gray-200 drop-shadow-[0_4px_4px_rgba(0,0,0,1)] ml-1 leading-none">
                           %
