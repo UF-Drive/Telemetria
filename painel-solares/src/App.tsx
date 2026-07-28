@@ -656,7 +656,7 @@ export default function App() {
 
              <h1 className="text-xl md:text-2xl font-bold truncate">Painel de Controle</h1>
              
-             {/* Indicador de Gravação*/}
+             {/* Indicador de Gravação Sutil */}
              {provaAtiva && !pilotMode && (
                <div className="ml-3 flex items-center justify-center" title="Gravação de dados em andamento">
                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,1)]"></div>
@@ -1123,7 +1123,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Correntes Mesclado */}
+                  {/* Correntes Mesclado*/}
                   <div className={`p-2 lg:p-6 flex flex-col items-center justify-center w-full h-full col-span-2 lg:col-span-2 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                     <span className="text-[10px] lg:text-[13px] font-black uppercase tracking-wider text-gray-500 mb-2 w-full text-center">Correntes</span>
                     <div className="flex flex-row w-full items-stretch">
@@ -1179,7 +1179,7 @@ export default function App() {
                   </div>
                </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 min-h-0">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 min-h-0 overflow-y-auto pb-4">
                   {/* Card 1: Controle de Prova */}
                   <div className={`p-6 md:p-8 rounded-3xl shadow-lg border flex flex-col justify-center transition-colors ${darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-white border-gray-200'}`}>
                      <div className="text-center mb-8 flex flex-col items-center justify-center">
@@ -1250,11 +1250,11 @@ export default function App() {
                   </div>
                </div>
 
-            
+               {/* overflow-x-hidden adicionado para remover a barra de rolagem */}
                <div className={`flex-1 rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-sm border mb-4 transition-colors duration-300 relative overflow-y-auto overflow-x-hidden ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/50'}`}>
                   <div className="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
                   
-                  <div className="flex flex-col md:flex-row items-center justify-between relative z-10 h-full">
+                  <div className="flex flex-col md:flex-row items-center justify-center md:justify-between relative z-10 min-h-full gap-8 md:gap-0 py-4 md:py-0">
                      <div className="flex-1 mb-6 md:mb-0 md:pr-4 flex flex-col items-center md:items-start text-center md:text-left w-full justify-center">
                         <h3 className="text-lg font-bold mb-2 flex items-center justify-center md:justify-start">
                           <Zap className="mr-2 text-blue-500" size={20} /> 
